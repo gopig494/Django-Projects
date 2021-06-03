@@ -1,0 +1,31 @@
+  <html>	
+		{%extends "studentapp/base.html"%}
+    {%block content%}
+    <h1> Student Details Table </h1>
+<font  face="Courier New" size="12" ><table>
+  <style>
+ table,th,td {text-align: center;
+              border: 1px solid black;
+              border-collapse: collapse;
+              padding:8px;
+          }
+          </style>
+				<thead>
+					<th>Student Register No</th>
+					<th>Student Name</th>
+					<th>Student Address</th>
+          <th> Modify Options </th>
+				</thead>
+				<tr>
+          {% for st in data %}
+					<td>{{st.student_register_no}}</td>
+					<td>{{st.student_name}}</td>
+          <td>{{st.student_address}}</td> 
+          <td><a href='/studentapp/update/{{st.id}}' >Update</a><br><a href='/studentapp/delete/{{st.id}}'>Delete</a>
+				</tr>{% endfor %}
+			</table></font>  
+    <br>
+    <a href="/studentapp/forms"><button type='button'>Add New Student</button></a>
+    
+   {%endblock%}
+</html>

@@ -1,0 +1,17 @@
+  <html>	
+		{%extends "studentapp/base.html"%}
+    {%block content%}
+		<h1> Update Student Details Here </h1>
+    <form method='POST'>
+      {% csrf_token%}
+      student_register_no : <input type='text' name='student_register_no' value="{{update.student_register_no}}"><div><br>
+      student_name : <input type='text' name='student_name' value="	{{update.student_name}}"><div><br>
+      student_address : <input type='text' name='student_address' value="{{update.student_address}}"><div><br>
+      <br>
+			
+      <input type='submit' value='Update Student'>
+          
+          
+    </form>
+   {%endblock%}
+</html>
