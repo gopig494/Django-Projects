@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+    {% load static %}
+    <head>
+         <title>Index</title>
+         <script src = "{% static 'ecommerce_app/js/index.js' %}"></script>
+         <link rel="stylesheet" href = "{% static 'ecommerce_app/css/index.css' %}">
+    </head>
+    <body>
+       <div class="main-container">
+            {% for each_emp in emp_details %}
+                {{each_emp.first_name}}
+            {% endfor %}
+       </div>
+    </body>
+</html>
