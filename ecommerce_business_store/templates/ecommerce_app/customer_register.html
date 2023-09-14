@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+    {% extends "ecommerce_app/index.html" %}
     {% load static %}
     <head>
          <title>Index</title>
@@ -7,13 +8,12 @@
          <link rel="stylesheet" href = "{% static 'ecommerce_app/css/index.css' %}">
     </head>
     <body>
-       <div class="main-container">
-            {% for each_emp in emp_details %}
-                {{each_emp.first_name}}
-            {% endfor %}
-       </div>
-       {% block test %}
-       Test ok
-       {% endblock %}
+        <form method="POST">
+            {% csrf_token %}
+            {{cust_register.as_p}}
+            <input type="submit" value="submit">
+        </form>
+        {% block test %}
+        {% endblock %}
     </body>
 </html>
