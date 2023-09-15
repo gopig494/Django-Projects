@@ -8,12 +8,35 @@
     </head>
     <body>
        <div class="main-container">
-            {% for each_emp in emp_details %}
-                {{each_emp.first_name}}
-            {% endfor %}
+            <table >
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th colspan="2">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for each_emp in emp_details %}
+                        <tr>
+                            <td>{{each_emp.id}}</td>
+                            <td>{{each_emp.first_name}}</td>
+                            <td>{{each_emp.last_name}}</td>
+                            <td>{{each_emp.phone}}</td>
+                            <td>{{each_emp.email}}</td>
+                            <td><a href="/ecommerce/update-customer/{{each_emp.id}}"><button>Update</button></a></td>
+                            <td><a href="/ecommerce/delete-customer/{{each_emp.id}}"><button>Delete</button></a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <a href="/ecommerce/customer-register/"><button type="button">Add New Customer</button></a>
        </div>
-       {% block test %}
+       {% comment %} {% block test %}
        Test ok
-       {% endblock %}
+       {% endblock %} {% endcomment %}
     </body>
 </html>

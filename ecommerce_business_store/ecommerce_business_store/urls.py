@@ -21,7 +21,5 @@ from ecommerce_app import urls as ecommerce_urls
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path("home",include(ecommerce_urls)),
-    path("",include(ecommerce_urls)),
-    path("customer-register",include(ecommerce_urls))
+    path("ecommerce/",include(ecommerce_urls))
 ]

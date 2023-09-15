@@ -5,3 +5,22 @@
 #id_first_name{
     color: red;
 }
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+    padding: 10px;
+  }
+
+  table{
+    margin-bottom: 10px;
+  }
+
+  a,button{
+    cursor: pointer;
+  }
+
+.main-container{
+    margin: 0 auto;
+    width: 718px;
+    margin-top: 24px;
+}

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-    {% extends "ecommerce_app/index.html" %}
+    {% comment %} {% extends "ecommerce_app/index.html" %} {% endcomment %}
     {% load static %}
     <head>
          <title>Index</title>
@@ -11,9 +11,10 @@
         <form method="POST">
             {% csrf_token %}
             {{cust_register.as_p}}
-            <input type="submit" value="submit">
+            <a href="/customer-register"><button style="margin-top:10px;">Submit</button></a>
         </form>
-        {% block test %}
-        {% endblock %}
+        <a href="/ecommerce/views/"><button style="margin-top:10px;">View Customer</button></a>
+        {% comment %} {% block test %}
+        {% endblock %} {% endcomment %}
     </body>
 </html>

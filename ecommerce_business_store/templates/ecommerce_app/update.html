@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+    {% comment %} {% extends "ecommerce_app/index.html" %} {% endcomment %}
+    {% load static %}
+    <head>
+         <title>Index</title>
+         <script src = "{% static 'ecommerce_app/js/index.js' %}"></script>
+         <link rel="stylesheet" href = "{% static 'ecommerce_app/css/index.css' %}">
+    </head>
+    <body>
+        <form method="POST">
+            {% csrf_token %}
+            <form method="PUT">
+                <lable>First Name:</lable>
+                <input type="text" name="first_name" value="{{cust_info.first_name}}">
+                <lable>Last Name:</lable>
+                <input type="text" name="last_name" value="{{cust_info.last_name}}">
+                <lable>Email Name:</lable>
+                <input type="email" name="email" value="{{cust_info.email}}">
+                <lable>Phone Name:</lable>
+                <input type="text" name="phone" value="{{cust_info.phone}}">
+                <a href="/ecommerce/update-customer/{{cust_info.id}}"><button>Update</button></a>
+            </form>
+        </form>
+        <a href="/ecommerce/views/"><button style="margin-top:10px;">View Customer</button></a>
+        {% comment %} {% block test %}
+        {% endblock %} {% endcomment %}
+    </body>
+    <style>
+        form{
+            display: flex;
+            flex-direction: column;
+            width: 182px;
+            gap: 6px;
+        }
+    </style>
+</html>
