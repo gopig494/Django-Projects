@@ -17,9 +17,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include
 from ecommerce_app import urls as ecommerce_urls
+from . import api as rest_api
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/method/',include(rest_api)),
     path("ecommerce/",include(ecommerce_urls))
 ]
