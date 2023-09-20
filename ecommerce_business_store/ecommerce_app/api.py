@@ -51,3 +51,15 @@ def login(request):
         return Response(data)
     else:
         return Response(validate_data.errors)
+    
+class CustomerCrud(APIView):
+    def post(self,request):
+        return Response("This is Post Method")
+    def get(self,request):
+        return Response("This is get Method")
+    def put(self,request):
+        return Response("This is Put Method")
+    def patch(self,request):
+        return Response("This is Patch Method")
+    def delete(self,request):
+        return Response("This is Delete Method")
