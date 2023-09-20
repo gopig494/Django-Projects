@@ -2,6 +2,11 @@ from django.shortcuts import render,redirect
 from django.http import HttpResponse
 from ecommerce_app.models import Customer
 from ecommerce_app.forms import CustomerInfo
+from django.views.generic import View
+
+class ClassView(View):
+    def get(self,request):
+        return HttpResponse("working")
 
 def index(request):
     emp_all_details = Customer.objects.all()

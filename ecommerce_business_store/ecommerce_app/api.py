@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from ecommerce_app.models import Customer
 from ecommerce_app.serializer import Customerserializer,Customerlogin
 import ecommerce_app
+from rest_framework.views import APIView
 
 @api_view(["GET","POST","PUT","DELETE","PATCH"])
 def get_customer_info(request):

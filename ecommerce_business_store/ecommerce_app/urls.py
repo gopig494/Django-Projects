@@ -24,5 +24,6 @@ urlpatterns = [
     path("views/",views.index),
     path("customer-register/",views.customer_register),
     path("update-customer/<id>",views.update_customer),
-    path("delete-customer/<id>",views.delete_customer)
+    path("delete-customer/<id>",views.delete_customer),
+    path('class_view/',views.ClassView.as_view())
 ]
