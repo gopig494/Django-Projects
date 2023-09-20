@@ -1,7 +1,7 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from ecommerce_app.models import Customer
-from ecommerce_app.serializer import Customerserializer
+from ecommerce_app.serializer import Customerserializer,Customerlogin
 import ecommerce_app
 
 @api_view(["GET","POST","PUT","DELETE","PATCH"])
@@ -41,3 +41,12 @@ def get_customer_info(request):
             return Response({"status":"success","message":"Customer info deleted successfully"})
         except ecommerce_app.models.Customer.DoesNotExist:
             return Response({"status":"failed","message":f"The customer {request.data.get('id')} is not found."})
+
+@api_view(["POST"])
+def login(request):
+    validate_data = Customerlogin(data = request.data)
+    if validate_data.is_valid():
+        data = validate_data.data
+        return Response(data)
+    else:
+        return Response(validate_data.errors)

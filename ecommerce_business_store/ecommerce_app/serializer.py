@@ -1,6 +1,14 @@
 from rest_framework import serializers
 from ecommerce_app.models import Customer,Nationality
 
+class Customerlogin(serializers.Serializer):
+    email = serializers.EmailField()
+    phone = serializers.CharField()
+
+    def validate(self,data):
+        if len(data.get('phone')) < 10:
+            raise serializers.ValidationError("Phone number must 10 digits")
+
 class Nationalityserializer(serializers.ModelSerializer):
     class Meta:
         model = Nationality
