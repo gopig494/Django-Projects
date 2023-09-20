@@ -6,7 +6,7 @@ class Nationalityserializer(serializers.ModelSerializer):
         model = Nationality
         fields = ["id","short_form"]
 
-class serializer(serializers.ModelSerializer):
+class Customerserializer(serializers.ModelSerializer):
     nationality = Nationalityserializer()
     color_info = serializers.SerializerMethodField()
     class Meta:
@@ -26,5 +26,5 @@ class serializer(serializers.ModelSerializer):
     
     def get_color_info(self,obj):
         country_name = Nationality.objects.get(id = obj.nationality.id)
-        return country_name
+        return country_name.short_form
     

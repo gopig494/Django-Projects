@@ -16,6 +16,7 @@
                         <th>Last Name</th>
                         <th>Phone</th>
                         <th>Email</th>
+                        <th>Nationality</th>
                         <th colspan="2">Actions</th>
                     </tr>
                 </thead>
@@ -27,6 +28,7 @@
                             <td>{{each_emp.last_name}}</td>
                             <td>{{each_emp.phone}}</td>
                             <td>{{each_emp.email}}</td>
+                            <td>{{each_emp.nationality}}</td>
                             <td><a href="/ecommerce/update-customer/{{each_emp.id}}"><button>Update</button></a></td>
                             <td><a href="/ecommerce/delete-customer/{{each_emp.id}}"><button>Delete</button></a></td>
                         </tr>

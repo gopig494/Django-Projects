@@ -1,17 +1,18 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from ecommerce_app.models import Customer
-from ecommerce_app.serializer import serializer
+from ecommerce_app.serializer import Customerserializer
 import ecommerce_app
 
 @api_view(["GET","POST","PUT","DELETE","PATCH"])
 def get_customer_info(request):
     if request.method == "GET":
         obj2 = Customer.objects.all()
-        ser = serializer(obj2, many = True)
+        # obj2 = Customer.objects.filter(nationality = 2)
+        ser = Customerserializer(obj2, many = True)
         return Response(ser.data)
     elif request.method == "POST":
-        data = serializer(data = request.data)
+        data = Customerserializer(data = request.data)
         if data.is_valid():
             data.save()
             return Response(data.data)
@@ -19,7 +20,7 @@ def get_customer_info(request):
             return Response(data.errors)
     elif request.method == "PUT":
         exe_data = Customer.objects.get(id=request.data.get('id'))
-        update_va = serializer(exe_data,data = request.data)
+        update_va = Customerserializer(exe_data,data = request.data)
         if update_va.is_valid():
            update_va.save()
            return Response(update_va.data)
@@ -27,7 +28,7 @@ def get_customer_info(request):
             return Response(update_va.errors) 
     elif request.method == "PATCH":
         exe_data = Customer.objects.get(id=request.data.get('id'))
-        update_va = serializer(exe_data,data = request.data, partial = True)
+        update_va = Customerserializer(exe_data,data = request.data, partial = True)
         if update_va.is_valid():
            update_va.save()
            return Response(update_va.data)
