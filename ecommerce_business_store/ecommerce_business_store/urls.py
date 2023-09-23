@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include
 from ecommerce_app import urls as ecommerce_urls
-from . import api as rest_api
+from . import api_url as rest_api
 
 
 urlpatterns = [

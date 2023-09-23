@@ -4,6 +4,7 @@ from ecommerce_app.models import Customer
 from ecommerce_app.serializer import Customerserializer,Customerlogin
 import ecommerce_app
 from rest_framework.views import APIView
+from rest_framework import viewsets
 
 @api_view(["GET","POST","PUT","DELETE","PATCH"])
 def get_customer_info(request):
@@ -53,13 +54,47 @@ def login(request):
         return Response(validate_data.errors)
     
 class CustomerCrud(APIView):
+
     def post(self,request):
-        return Response("This is Post Method")
+        data = Customerserializer(data = request.data)
+        if data.is_valid():
+            data.save()
+            return Response(data.data)
+        else:
+            return Response(data.errors)
+        
     def get(self,request):
-        return Response("This is get Method")
+        obj2 = Customer.objects.all()
+        # obj2 = Customer.objects.filter(nationality = 2)
+        ser = Customerserializer(obj2, many = True)
+        return Response(ser.data)
+    
     def put(self,request):
-        return Response("This is Put Method")
+        exe_data = Customer.objects.get(id=request.data.get('id'))
+        update_va = Customerserializer(exe_data,data = request.data)
+        if update_va.is_valid():
+           update_va.save()
+           return Response(update_va.data)
+        else:
+            return Response(update_va.errors) 
+        
     def patch(self,request):
-        return Response("This is Patch Method")
+        exe_data = Customer.objects.get(id=request.data.get('id'))
+        update_va = Customerserializer(exe_data,data = request.data, partial = True)
+        if update_va.is_valid():
+           update_va.save()
+           return Response(update_va.data)
+        else:
+            return Response(update_va.errors)
+        
     def delete(self,request):
-        return Response("This is Delete Method")
+        try:
+            del_obj = Customer.objects.get(id = request.data.get("id"))
+            del_obj.delete()
+            return Response({"status":"success","message":"Customer info deleted successfully"})
+        except ecommerce_app.models.Customer.DoesNotExist:
+            return Response({"status":"failed","message":f"The customer {request.data.get('id')} is not found."})
+
+class CustomerViewSet(viewsets.ModelViewSet):
+    serializer_class = Customerserializer
+    queryset = Customer.objects.all()
