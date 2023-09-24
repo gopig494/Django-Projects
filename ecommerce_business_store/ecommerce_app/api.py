@@ -98,3 +98,10 @@ class CustomerCrud(APIView):
 class CustomerViewSet(viewsets.ModelViewSet):
     serializer_class = Customerserializer
     queryset = Customer.objects.all()
+
+    def list(self, request):
+        searchdata = request.data.get('searchdata')
+        if searchdata:
+            self.queryset = self.queryset.filter(first_name__startswith = searchdata)
+        data = Customerserializer(self.queryset, many = True)
+        return Response({"status":"success","data":data.data})
