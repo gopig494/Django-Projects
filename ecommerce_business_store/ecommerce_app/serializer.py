@@ -1,13 +1,31 @@
 from rest_framework import serializers
 from ecommerce_app.models import Customer,Nationality
+from django.contrib.auth.models import User
 
 class Customerlogin(serializers.Serializer):
+    username = serializers.CharField()
     email = serializers.EmailField()
-    phone = serializers.CharField()
+    password = serializers.CharField()
 
-    def validate(self,data):
-        if len(data.get('phone')) < 10:
-            raise serializers.ValidationError("Phone number must 10 digits")
+class CustomerRegisterSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    email = serializers.EmailField()
+    password = serializers.CharField()
+
+    def validate(self, data):
+        if User.objects.filter(username=data.get("username")).exists():
+            raise serializers.ValidationError("username is already taken")
+        elif User.objects.filter(email = data.get("email")).exists():
+            raise serializers.ValidationError("email is already taken")
+        elif not data.get("password"):
+            raise serializers.ValidationError("password not found")
+        return data
+
+    def create(self, data):
+        create_data = User.objects.create(username = data.get('username'),email = data.get('email'))
+        create_data.set_password(data.get("password"))
+        create_data.save()
+        return data
 
 class Nationalityserializer(serializers.ModelSerializer):
     class Meta:

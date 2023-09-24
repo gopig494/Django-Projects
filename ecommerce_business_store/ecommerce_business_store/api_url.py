@@ -10,5 +10,6 @@ urlpatterns = [
     path('customer_crud',include(router.urls)),
     path('get_customer_info',api.get_customer_info),
     path('login',api.login),
-    path('customer',api.CustomerCrud.as_view())
+    path('customer',api.CustomerCrud.as_view()),
+    path('register',api.register_customer)
 ]

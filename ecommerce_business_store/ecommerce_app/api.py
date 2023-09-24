@@ -1,10 +1,14 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from ecommerce_app.models import Customer
-from ecommerce_app.serializer import Customerserializer,Customerlogin
+from ecommerce_app.serializer import Customerserializer,Customerlogin,CustomerRegisterSerializer
 import ecommerce_app
 from rest_framework.views import APIView
-from rest_framework import viewsets
+from rest_framework import viewsets,status
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
+from rest_framework.authtoken.models import Token
+
 
 @api_view(["GET","POST","PUT","DELETE","PATCH"])
 def get_customer_info(request):
@@ -49,9 +53,14 @@ def login(request):
     validate_data = Customerlogin(data = request.data)
     if validate_data.is_valid():
         data = validate_data.data
-        return Response(data)
+        auth = authenticate(username = data.get("username"),password = data.get("password"))
+        if auth:
+            token,status_ = Token.objects.get_or_create(user = auth)
+            return Response({"status":"success","message":"Logged in successfully","token":str(token)},status=status.HTTP_200_OK)
+        else:
+            return Response({"status":"failed","message":"email or password is invalid"},status=status.HTTP_401_UNAUTHORIZED)    
     else:
-        return Response(validate_data.errors)
+        return Response({"status":"failed","message":validate_data.errors},status=status.HTTP_400_BAD_REQUEST)
     
 class CustomerCrud(APIView):
 
@@ -104,4 +113,13 @@ class CustomerViewSet(viewsets.ModelViewSet):
         if searchdata:
             self.queryset = self.queryset.filter(first_name__startswith = searchdata)
         data = Customerserializer(self.queryset, many = True)
-        return Response({"status":"success","data":data.data})
+        return Response({"status":"success","data":data.data},status=status.HTTP_201_CREATED)
+    
+@api_view(["POST"])
+def register_customer(request):
+    serializer_data = CustomerRegisterSerializer(data = request.data)
+    if serializer_data.is_valid():
+        serializer_data.save()
+        return Response({"status":"success","data":serializer_data.data},status=status.HTTP_201_CREATED)
+    else:
+        return Response({"status":"failed","message":serializer_data.errors},status=status.HTTP_400_BAD_REQUEST)
