@@ -1,4 +1,4 @@
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view,permission_classes
 from rest_framework.response import Response
 from ecommerce_app.models import Customer
 from ecommerce_app.serializer import Customerserializer,Customerlogin,CustomerRegisterSerializer
@@ -8,15 +8,25 @@ from rest_framework import viewsets,status
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
-
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import TokenAuthentication,BaseAuthentication 
+from django.core.paginator import Paginator
+import django
 
 @api_view(["GET","POST","PUT","DELETE","PATCH"])
 def get_customer_info(request):
     if request.method == "GET":
         obj2 = Customer.objects.all()
         # obj2 = Customer.objects.filter(nationality = 2)
-        ser = Customerserializer(obj2, many = True)
+        page = request.GET.get('page',1)
+        page_size = 2
+        pagenation = Paginator(obj2,page_size)
+        try:
+            ser = Customerserializer(pagenation.page(page), many = True)
+        except django.core.paginator.EmptyPage:
+            return Response({"status":"failed","message":"no data found"},status = status.HTTP_404_NOT_FOUND)
         return Response(ser.data)
+
     elif request.method == "POST":
         data = Customerserializer(data = request.data)
         if data.is_valid():
@@ -63,7 +73,8 @@ def login(request):
         return Response({"status":"failed","message":validate_data.errors},status=status.HTTP_400_BAD_REQUEST)
     
 class CustomerCrud(APIView):
-
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
     def post(self,request):
         data = Customerserializer(data = request.data)
         if data.is_valid():
