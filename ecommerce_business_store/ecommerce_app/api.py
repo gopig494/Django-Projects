@@ -1,4 +1,4 @@
-from rest_framework.decorators import api_view,permission_classes
+from rest_framework.decorators import api_view,permission_classes,action
 from rest_framework.response import Response
 from ecommerce_app.models import Customer
 from ecommerce_app.serializer import Customerserializer,Customerlogin,CustomerRegisterSerializer
@@ -118,6 +118,7 @@ class CustomerCrud(APIView):
 class CustomerViewSet(viewsets.ModelViewSet):
     serializer_class = Customerserializer
     queryset = Customer.objects.all()
+    http_method_names = ["GET"]
 
     def list(self, request):
         searchdata = request.data.get('searchdata')
@@ -125,6 +126,11 @@ class CustomerViewSet(viewsets.ModelViewSet):
             self.queryset = self.queryset.filter(first_name__startswith = searchdata)
         data = Customerserializer(self.queryset, many = True)
         return Response({"status":"success","data":data.data},status=status.HTTP_201_CREATED)
+    
+    @action(detail=False,methods=["POST"])
+    def get_action_api(self,request):
+        return Response({"status":"success"})
+    
     
 @api_view(["POST"])
 def register_customer(request):
