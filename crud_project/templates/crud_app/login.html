@@ -1,0 +1,34 @@
+{% extends "crud_app/base.html"%}
+    {% block head %}
+        {% load static %}
+            <link rel="stylesheet" href = "{% static 'crud_app/css/index.css' %}">
+    {% endblock %}
+    {% block content %}
+    <div class="main-page-login">
+        <div class="log-in-form">   
+            <form class="custom-form" method="POST">
+                {% csrf_token %}
+                {{register_from.as_p}}
+             {% comment %} <div class="sno">
+                    <lable>Sno:</label>
+                    <input type="Number" name="id">
+                </div>
+                <div class="Id">
+                    <lable>ID:</label>
+                    <input type="Number" name="id">
+                </div>
+                <div class="user-name">
+                    <lable>User Name:</label>
+                    <input type="text" name="username">
+                </div>
+                <div class="full-name">
+                    <lable>Full Name:</label>
+                    <input type="text" name="password">
+                </div>  {% endcomment %}
+               
+                   <a href="/crud/create/"> <button>Create</button></a>
+            </form>
+            <a href="/crud/view"><button>View All The Customers</button></a>
+        </div>
+    </div>
+{% endblock %}

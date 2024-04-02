@@ -1,0 +1,14 @@
+{% extends "crud_app/base.html" %}
+{% block content %}
+        <form method = "POST">
+            {% csrf_token %}
+                <lable>User Id:</lable>
+                <input type="text" name="user_id" value="{{cust_info.user_id}}">
+                <lable>User Name:</lable>
+                <input type="text" name="user_name" value="{{cust_info.user_name}}">
+                <lable>Full Name:</lable>
+                <input type="text" name="full_name" value="{{cust_info.full_name}}">
+                <a href="/crud/update/{{cust_info.id}}"><button>Update</button></a>
+        </form>
+        <a href="/crud/view/"><button style="margin-top:10px;">View Customer</button></a>
+{% endblock %}

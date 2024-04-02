@@ -1,0 +1,28 @@
+{% extends "crud_app/base.html" %}
+{% block content %}
+    <table>
+        <thead>
+            <tr>
+                <td>Unique ID</td>
+                <td>User ID</td>
+                <td>User Name</td>
+                <td>Full Name</td>
+                <td>Delete</td>
+                <td>Update</td>
+            </tr>
+        </thead>
+        <tbody>
+            {% for k in all_data %}
+            <tr>
+                <td>{{k.id}}</td>
+                <td>{{k.user_id}}</td>
+                <td>{{k.user_name}}</td>
+                <td>{{k.full_name}}</td>
+                <td><a href="/crud/delete/{{k.id}}"><button>Delete</button></a></td>
+                <td><a href="/crud/update/{{k.id}}"><button>update</button></a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="/crud/create/"><button style="margin-top:10px;">Create Customer</button></a>
+{% endblock %}
