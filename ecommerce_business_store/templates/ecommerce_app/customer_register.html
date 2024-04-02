@@ -1,20 +1,13 @@
-<!DOCTYPE html>
-<html>
-    {% comment %} {% extends "ecommerce_app/index.html" %} {% endcomment %}
-    {% load static %}
-    <head>
-         <title>Index</title>
-         <script src = "{% static 'ecommerce_app/js/index.js' %}"></script>
-         <link rel="stylesheet" href = "{% static 'ecommerce_app/css/index.css' %}">
-    </head>
-    <body>
-        <form method="POST">
-            {% csrf_token %}
-            {{cust_register.as_p}}
-            <a href="/customer-register"><button style="margin-top:10px;">Submit</button></a>
-        </form>
-        <a href="/ecommerce/views/"><button style="margin-top:10px;">View Customer</button></a>
-        {% comment %} {% block test %}
-        {% endblock %} {% endcomment %}
-    </body>
-</html>
+{% extends "ecommerce_app/base.html" %}
+{% block content %}
+<form method="POST">
+    {% csrf_token %}
+    {{cust_register.as_p}}
+    <a href="/customer-register">
+        <button style="margin-top:10px;">Submit</button>
+    </a>
+</form>
+<a href="/ecommerce/views/"><button style="margin-top:10px;">View Customer</button></a>
+{% comment %} {% block test %}
+{% endblock %} {% endcomment %}
+{% endblock %}

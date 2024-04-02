@@ -12,4 +12,4 @@ urlpatterns = [
     path('login',api.login),
     path('customer',api.CustomerCrud.as_view()),
     path('register',api.register_customer)
-]
+] 

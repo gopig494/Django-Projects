@@ -12,7 +12,7 @@ class Customer(models.Model):
     first_name = models.CharField(max_length=10)
     last_name = models.CharField(max_length=10)
     email = models.EmailField()
-    phone = models.CharField(max_length=12)
+    phone = models.CharField(max_length=13)
     nationality = models.ForeignKey(Nationality,on_delete=models.CASCADE)
      
     def __str__(self) -> str:

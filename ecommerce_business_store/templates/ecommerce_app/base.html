@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+    {% comment %} {% extends "ecommerce_app/index.html" %} {% endcomment %}
+    {% load static %}
+    <head>
+         <title>Index</title>
+         <script src = "{% static 'ecommerce_app/js/index.js' %}"></script>
+         <link rel="stylesheet" href = "{% static 'ecommerce_app/css/index.css' %}">
+    </head>
+    <body>
+        {% block content %}
+        {% endblock %}
+    </body>
+</html>
