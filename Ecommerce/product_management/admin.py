@@ -15,7 +15,7 @@ class ProductAdmin(admin.ModelAdmin):
     fieldsets = [(None,{"fields":["title"]}),
                 ("Section 1",{"fields":["price","image"]}),
                 ("Section 2",{"fields":["category","mrp","tax_percentage","description"]})]
-    # inlines = [CategoryInline]
+    list_display = ["title","price","mrp"]
 
 class CategoryModelAdmin(admin.ModelAdmin):
     inlines = [CategoryInline] 

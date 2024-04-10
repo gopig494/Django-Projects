@@ -1,6 +1,8 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
+from django.contrib import admin
+
 
 # Create your models here.
 
@@ -30,6 +32,14 @@ class Product(models.Model):
     month = models.CharField(max_length=9,
                     choices=MONTH_CHOICES,
                     default="JANUARY")
+    
+    @admin.display(
+    boolean=True,
+    ordering="mrp",
+     description="Product Price"   
+    )
+    def price(self):
+        return True
 
 class Author(models.Model):
     name = models.CharField(max_length=100)
