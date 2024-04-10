@@ -1,0 +1,21 @@
+<div>
+    {% comment %} <a>href="{% url 'dynamic_url' 1 1%}"</a>
+    <a>href="{% url 'dy'%}"</a>
+    <a>href="{% url 'vote' 2 2 %}"</a> {% endcomment %}
+    {% comment %} {% for ob in obj %}
+        <p>{{ob.title}}</p> {% endcomment %}
+   <form action="{% url 'vote' 1 1 %}" method="post">
+        {% csrf_token %}
+        <fieldset>
+            {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+            {% for choice in obj.all_books %}
+                {{choice}}
+                <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}">
+                <label for="choice{{ forloop.counter }}">{{ choice.title }}</label><br>
+            {% endfor %}
+        </fieldset>
+        <input type="submit" value="Vote">
+        </form> 
+    {% comment %} {% endfor %} {% endcomment %}
+
+</div>

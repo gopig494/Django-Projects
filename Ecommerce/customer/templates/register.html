@@ -1,0 +1,16 @@
+{% block content %}
+<p>Welcome, {{ user.username }}!</p>
+<form action='/customer/register/' method='POST'>
+    {% csrf_token %}
+    <label>Username</lable>
+        <input type='text' name='username'>
+    <label>Password</lable>
+        <input type='password' name='password'>
+    <input type='submit' name='submit' value = "submit">
+</form>
+{% for msg in messages %}
+    <h1>{{msg}}</h1>
+{% endfor %}
+
+
+{% endblock %}

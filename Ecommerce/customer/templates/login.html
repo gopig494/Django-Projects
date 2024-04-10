@@ -1,0 +1,15 @@
+{% block content %}
+<p>Welcome, {{ user.username }}!</p>
+<form action='/customer/login/' method='POST'>
+    {% csrf_token %}
+    <label>Username</lable>
+        <input type='text' name='username'>
+    <label>Password</lable>
+        <input type='password' name='password'>
+    <input type='submit' name='submit' value = "submit">
+</form>
+
+<h2>{{user.is_autheticated}}</h2>
+<h2>{{user.first_name}}</h2>
+
+{% endblock %}

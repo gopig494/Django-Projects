@@ -1,0 +1,7 @@
+
+  <h1>Blog Posts</h1>
+  <ul>
+    {% for post in tag %}
+      <li><a href="{% url 'generic_detail' pk=post.pk %}">{{ post.name }}</a></li>
+    {% endfor %}
+  </ul>
