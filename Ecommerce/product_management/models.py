@@ -63,6 +63,17 @@ class Article2(models.Model):
     title = models.CharField(max_length=100)
     tags = models.ManyToManyField(Tag, related_name='articles')
 
+class StockEntry(models.Model):
+    posting_date = models.DateTimeField(auto_now_add=True)
+    warehosue = models.CharField(max_length=50)
+    stock_type = models.CharField(max_length=50,choices=[
+        ("Material Receipt","Material Receipt")
+    ])
+
+class StockEntryItems(models.Model):
+    product = models.ForeignKey(StockEntry,on_delete=models.SET_NULL,null=True)
+    stock_qty = models.FloatField()
+    price = models.DecimalField(max_digits=4,decimal_places=3)
 
 
 

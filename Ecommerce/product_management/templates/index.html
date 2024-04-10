@@ -1,10 +1,12 @@
 {% extends "product_management/templates/base.html" %}
 
 {% block content %}
-{% comment %} {% for data in product_info %}
+ {% for data in product_info %}
+    {% if data.image %}
+    <img src="{{ data.image.url }}" alt="{{ data.title }}">
 
-<img src="{{ data.image.url }}" alt="{{ data.title }}">
-{% endfor %} {% endcomment %}
+    {% endif %}
+{% endfor %} 
 
 
 
