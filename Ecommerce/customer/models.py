@@ -28,7 +28,7 @@ class FieldCheck(models.Model):
     # ti_f = models.TextField()
     # ur_f = models.URLField()
     # uu_f = models.UUIDField()
-
+ 
 from django.core.exceptions import ValidationError
 
 class FieldCheck2(models.Model):

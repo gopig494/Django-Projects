@@ -1,3 +1,4 @@
+from typing import Collection
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
@@ -36,10 +37,10 @@ class Product(models.Model):
     @admin.display(
     boolean=True,
     ordering="mrp",
-     description="Product Price"   
+    description="Product Price"   
     )
-    def price(self):
-        return True
+    def was_published_recently(self):
+        return "s"
 
 class Author(models.Model):
     name = models.CharField(max_length=100)
@@ -70,7 +71,7 @@ class Tag(models.Model):
         return self.name
 
 class Article2(models.Model):
-    title = models.CharField(max_length=100)
+    title = models.CharField(max_length=100) 
     tags = models.ManyToManyField(Tag, related_name='articles')
 
 class StockEntry(models.Model):
@@ -85,7 +86,27 @@ class StockEntryItems(models.Model):
     stock_qty = models.FloatField()
     price = models.DecimalField(max_digits=4,decimal_places=3)
 
+class Discount(models.Model):
+    d_percentage = models.DecimalField(max_digits=3,decimal_places=2,default = 50.0)
+    class Meta:
+        db_table = "product_discount"
 
+class DiscountInfo(models.Model):
+    d_percentage = models.DecimalField(max_digits=3,decimal_places=2,default = 50.0,db_column='product_d_percentage')
+    class Meta:
+        db_table = "product_discounts"
+        db_table_comment = "it is used to specify product discounts."
+
+class FieldTypesCheckL(models.Model):
+    title = models.CharField(max_length=100)
+    bike_name = models.CharField(max_length = 100,blank = True,unique=True,null = True)
+
+    # def clean(self):
+    #     self.title = "Gopis"
+    #     self.bike_name = "Yamahass"
+    #     raise ValidationError("kk")
+    # def full_clean(self):
+    #     pass
 
 def validate_test(value):
     if not value:

@@ -2,6 +2,7 @@ from django.contrib import admin
 from product_management.models import *
 # Register your models here.
 
+# StackedInline
 class CategoryInline(admin.TabularInline):
     model = Product
     extra = 1
@@ -16,6 +17,8 @@ class ProductAdmin(admin.ModelAdmin):
                 ("Section 1",{"fields":["price","image"]}),
                 ("Section 2",{"fields":["category","mrp","tax_percentage","description"]})]
     list_display = ["title","price","mrp"]
+    list_filter = ["tax_percentage","mrp","category"]
+    search_fields = ["title","mrp","price"]
 
 class CategoryModelAdmin(admin.ModelAdmin):
     inlines = [CategoryInline] 
@@ -33,3 +36,5 @@ admin.site.register(Profile)
 admin.site.register(Category,CategoryModelAdmin)
 admin.site.register(StockEntry,StockEntryModelAdmin)
 admin.site.register(StockEntryItems)
+admin.site.register(DiscountInfo)
+admin.site.register(FieldTypesCheckL)
