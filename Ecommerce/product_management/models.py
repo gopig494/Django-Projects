@@ -3,7 +3,8 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from django.contrib import admin
-
+from django.utils.translation import gettext_lazy as _
+import datetime
 
 # Create your models here.
 
@@ -97,9 +98,107 @@ class DiscountInfo(models.Model):
         db_table = "product_discounts"
         db_table_comment = "it is used to specify product discounts."
 
+def get_choices():
+    # return {1:"one",None:"Please Dynamic Choice."}
+    return [("db","label"),(None,"Select Choice"),("db","hey db")]
+
+def json_fun():
+    import json
+    return json.dumps({"s","s"})
+
 class FieldTypesCheckL(models.Model):
+    @staticmethod
+    def get_choicess():
+        return [
+                    (
+                        "Audio",
+                        (
+                            ("vinyl", "Vinyl"),
+                            ("cd", "CD"),
+                        ),
+                    ),
+                    (
+                        "Video",
+                        (
+                            ("vhs", "VHS Tape"),
+                            ("dvd", "DVD"),
+                        ),
+                    ),
+                    ("unknown", "Unknown"),
+                ]
+    
+    class AllChoices(models.TextChoices):
+        ch1 = ("iphone",_("Iphone"))
+    
+    class Bike(models.TextChoices):
+        Bajaj = "bj"
+        Honda = 'hd'
+    
+    class Suit(models.IntegerChoices):
+        DIAMOND = 1
+        SPADE = 2
+        HEART = 3
+        CLUB = 4
+        __empty__ = _("Please Choose Choice.")
+
+    suit = models.IntegerField(choices=Suit,error_messages={"required":"This Field can't be empty."},help_text="Please choose")
+
+    class MoonLandings(datetime.date, models.Choices):
+        APOLLO_11 = 1969, 7, 20, "Apollo 11 (Eagle)"
+        APOLLO_12 = 1969, 11, 19, "Apollo 12 (Intrepid)"
+        APOLLO_14 = 1971, 2, 5, "Apollo 14 (Antares)"
+        APOLLO_15 = 1971, 7, 30, "Apollo 15 (Falcon)"
+        APOLLO_16 = 1972, 4, 21, "Apollo 16 (Orion)"
+        APOLLO_17 = 1972, 12, 11, "Apollo 17 (Challenger)"
+
     title = models.CharField(max_length=100)
     bike_name = models.CharField(max_length = 100,blank = True,unique=True,null = True)
+    model = models.CharField(max_length=100,choices=[(None,"Please Select Choice.."),("FZS","fzs"),
+                                                    ("FZX","fzx")],default = "FZS")
+    year = models.CharField(max_length=100,choices=[(None,"Please Select Choice.."),("2012","2k12"),
+                                                    ("2k13","2k13")],default = "FZS",null=True,blank=True)
+    dynamic_choices = models.CharField(max_length=100,choices = get_choices())
+    choices = models.CharField(max_length=100,choices = get_choicess())
+    cls_choices = models.CharField(max_length=100,choices = AllChoices)
+    enum_choices = models.CharField(max_length=100,choices = Bike)
+    # moon_landing = models.CharField(max_length=100,choices = MoonLandings)
+
+    dd_default = models.CharField(max_length=10,db_default = "i am de default",blank=True)
+    dd_index = models.CharField(max_length=10,db_index = True,blank=True)
+
+
+    # json_ob = models.JSONField(editable=False,default = json_fun())
+
+    checking = models.CharField(max_length=100,blank=True,null=False)
+
+    checking_2 = models.CharField(max_length=100,blank=True,null=False)
+
+    def __str__(self):
+        return self.title
+
+
+def validate_1(obj):
+    raise ValidationError("Date should be Today..!")
+
+
+def validate_2(obj):
+    raise ValidationError("Date should be different..!")
+
+class FieldTypesCheckL2(models.Model):
+    # @staticmethod
+    # def validate_1(obj):
+    #     if not obj.pub_date == datetime.datetime.today():
+    #         raise ValidationError("Date should be Today..!")
+    
+    # @staticmethod
+    # def validate_2(obj):
+    #     if obj.pub_date == datetime.datetime.today():
+    #         raise ValidationError({"pub_date":"Date should be different..!"})
+
+    pub_date = models.DateField()
+    title = models.OneToOneField(FieldTypesCheckL,verbose_name=_("One Army"), on_delete=models.CASCADE,related_name = "one_to_one",unique_for_date="pub_date")
+    many = models.ManyToManyField(FieldTypesCheckL)
+    valida = models.ForeignKey(FieldTypesCheckL,validators=[validate_1,validate_2],null=True,on_delete=models.SET_NULL,related_name = "validate_field")
 
     # def clean(self):
     #     self.title = "Gopis"
@@ -107,6 +206,7 @@ class FieldTypesCheckL(models.Model):
     #     raise ValidationError("kk")
     # def full_clean(self):
     #     pass
+
 
 def validate_test(value):
     if not value:
