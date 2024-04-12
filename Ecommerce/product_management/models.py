@@ -178,11 +178,16 @@ class FieldTypesCheckL(models.Model):
 
 
 def validate_1(obj):
-    raise ValidationError("Date should be Today..!")
-
+    # raise ValidationError("Date should be Today..!")
+    pass
 
 def validate_2(obj):
-    raise ValidationError("Date should be different..!")
+    # raise ValidationError("Date should be different..!")
+    pass
+
+def get_path(obj,filename):
+    print("--------------filename",filename)
+    return filename
 
 class FieldTypesCheckL2(models.Model):
     # @staticmethod
@@ -199,6 +204,17 @@ class FieldTypesCheckL2(models.Model):
     title = models.OneToOneField(FieldTypesCheckL,verbose_name=_("One Army"), on_delete=models.CASCADE,related_name = "one_to_one",unique_for_date="pub_date")
     many = models.ManyToManyField(FieldTypesCheckL)
     valida = models.ForeignKey(FieldTypesCheckL,validators=[validate_1,validate_2],null=True,on_delete=models.SET_NULL,related_name = "validate_field")
+
+    date_now = models.DateField(auto_now=True)
+    datetime_now = models.DateTimeField(auto_now=True)
+    datetime_cr = models.DateTimeField(auto_now_add=True)
+
+
+    duration_f = models.DurationField(null = True)
+    email_f = models.EmailField(null = True)
+    file_f = models.FileField(upload_to="files")
+    file_d = models.FileField(upload_to="files/%Y/%m/%d/")
+    file_fun = models.FileField(upload_to=get_path)
 
     # def clean(self):
     #     self.title = "Gopis"
