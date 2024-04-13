@@ -1,0 +1,4 @@
+ERROR:root:Debug working
+CRITICAL:root:Debug working
+ERROR:root:Debug working
+CRITICAL:root:Debug working

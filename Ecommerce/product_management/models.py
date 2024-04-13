@@ -5,6 +5,8 @@ from django.contrib.auth.models import User
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 import datetime
+from django.core.files.storage import FileSystemStorage
+
 
 # Create your models here.
 
@@ -189,7 +191,11 @@ def get_path(obj,filename):
     print("--------------filename",filename)
     return filename
 
+file_storage = FileSystemStorage(location="/system_storage")
+
+
 class FieldTypesCheckL2(models.Model):
+    file_stor = models.FileField(upload_to=file_storage)
     # @staticmethod
     # def validate_1(obj):
     #     if not obj.pub_date == datetime.datetime.today():
