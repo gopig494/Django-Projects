@@ -6,6 +6,7 @@ from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 import datetime
 from django.core.files.storage import FileSystemStorage
+import os
 
 
 # Create your models here.
@@ -193,9 +194,15 @@ def get_path(obj,filename):
 
 file_storage = FileSystemStorage(location="/system_storage")
 
+def get_file_path():
+    from django.conf import settings
+    print("----------------------",settings.MEDIA_ROOT)
+    return os.path.join(settings.MEDIA_ROOT,"images")
+
 
 class FieldTypesCheckL2(models.Model):
     file_stor = models.FileField(upload_to=file_storage)
+    file_path = models.FilePathField(path=get_file_path,recursive=True,allow_files = True,allow_folders=True)
     # @staticmethod
     # def validate_1(obj):
     #     if not obj.pub_date == datetime.datetime.today():
