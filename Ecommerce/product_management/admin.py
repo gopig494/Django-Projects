@@ -26,6 +26,11 @@ class CategoryModelAdmin(admin.ModelAdmin):
 class StockEntryModelAdmin(admin.ModelAdmin):
     inlines = [StockEntryLine]
 
+class FieldTypesCheckL2ModelAdmin(admin.ModelAdmin):
+    prepopulated_fields = {"slug_f": ["chr"]}
+
+class FieldCheck3ModelAdmin(admin.ModelAdmin):
+    prepopulated_fields = {"URL": ["title"],}
 
 admin.site.register(Product,ProductAdmin)
 admin.site.register(Author)
@@ -38,4 +43,8 @@ admin.site.register(StockEntry,StockEntryModelAdmin)
 admin.site.register(StockEntryItems)
 admin.site.register(DiscountInfo)
 admin.site.register(FieldTypesCheckL)
-admin.site.register(FieldTypesCheckL2)
+admin.site.register(FieldTypesCheckL2,FieldTypesCheckL2ModelAdmin)
+admin.site.register(FieldCheck3,FieldCheck3ModelAdmin)
+admin.site.register(CheckUUID)
+# admin.site.register(Product_Forign)
+

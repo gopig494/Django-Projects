@@ -1,8 +1,14 @@
 from django.db import models
 import datetime
+from product_management.models import Product_Forign
 
 # Create your models here.
 
+class Customer(models.Model):
+    name = models.CharField(max_length=20)
+
+class Product(Product_Forign):
+    pass
 
 
 class FieldCheck(models.Model):

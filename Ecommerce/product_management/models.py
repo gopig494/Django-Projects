@@ -1,5 +1,6 @@
 from typing import Collection
 from django.db import models
+from django.db.models import F
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from django.contrib import admin
@@ -7,6 +8,7 @@ from django.utils.translation import gettext_lazy as _
 import datetime
 from django.core.files.storage import FileSystemStorage
 import os
+import uuid
 
 
 # Create your models here.
@@ -107,7 +109,8 @@ def get_choices():
 
 def json_fun():
     import json
-    return json.dumps({"s","s"})
+    # return json.dumps({"s","s"})
+    return {"model":"json"}
 
 class FieldTypesCheckL(models.Model):
     @staticmethod
@@ -170,7 +173,7 @@ class FieldTypesCheckL(models.Model):
     dd_index = models.CharField(max_length=10,db_index = True,blank=True)
 
 
-    # json_ob = models.JSONField(editable=False,default = json_fun())
+    # json_ob = models.JSONField(editable=False,default = json_fun(),null=True)
 
     checking = models.CharField(max_length=100,blank=True,null=False)
 
@@ -201,8 +204,10 @@ def get_file_path():
 
 
 class FieldTypesCheckL2(models.Model):
+    fip_ad = models.GenericIPAddressField(verbose_name="FIP Address",null=True)
     file_stor = models.FileField(upload_to=file_storage)
     file_path = models.FilePathField(path=get_file_path,recursive=True,allow_files = True,allow_folders=True)
+    gen_field = models.GeneratedField(expression = F("file_path"),output_field = models.FilePathField(),db_persist = True)
     # @staticmethod
     # def validate_1(obj):
     #     if not obj.pub_date == datetime.datetime.today():
@@ -229,12 +234,39 @@ class FieldTypesCheckL2(models.Model):
     file_d = models.FileField(upload_to="files/%Y/%m/%d/")
     file_fun = models.FileField(upload_to=get_path)
 
+    img_h = models.IntegerField()
+    img_w = models.IntegerField()
+    img_f = models.ImageField(max_length=100,upload_to="images/",height_field="img_h",width_field="img_w")
+
+    # json_ob = models.JSONField(default = {},null=True)
+
+    chr = models.CharField(max_length=200)
+    
+    slug_f = models.SlugField(max_length=100)
+
     # def clean(self):
     #     self.title = "Gopis"
     #     self.bike_name = "Yamahass"
     #     raise ValidationError("kk")
     # def full_clean(self):
     #     pass
+
+class FieldCheck3(models.Model):
+    title = models.CharField(max_length=100)
+    URL = models.SlugField(max_length=100)
+    url_fiel = models.URLField(max_length=100)
+
+class CheckUUID(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+
+class Product_Forign(models.Model):
+    title = models.CharField(max_length=100)
+    customer = models.ForeignKey("Customer",on_delete=models.CASCADE)
+
+    class Meta:
+        abstract = True
+
 
 
 def validate_test(value):
