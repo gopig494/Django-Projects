@@ -9,6 +9,7 @@ import datetime
 from django.core.files.storage import FileSystemStorage
 import os
 import uuid
+from django.conf import settings
 
 
 # Create your models here.
@@ -253,20 +254,66 @@ class FieldTypesCheckL2(models.Model):
 
 class FieldCheck3(models.Model):
     title = models.CharField(max_length=100)
-    URL = models.SlugField(max_length=100)
+    URL = models.SlugField(max_length=100,unique=True)
     url_fiel = models.URLField(max_length=100)
+
+    def description(self):
+        pass
 
 class CheckUUID(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+class Person(models.Model):
+    title = models.CharField(max_length=100)
+    groups = models.ManyToManyField('Group', symmetrical=True)
+    group_1 = models.ManyToManyField('Group',symmetrical=False,related_name="group_1")
+
+class Group(models.Model):
+    title = models.CharField(max_length=100)
+    members = models.ManyToManyField('Person', symmetrical=True, null = True, blank = True)
+    uuids = models.ManyToManyField(CheckUUID, null = True, blank = True)
+    group = models.ManyToManyField("self", null = True, blank = True)
+
+class User(models.Model):
+    username = models.CharField(max_length=50)
+    following = models.ManyToManyField('self', related_name='followers',blank=True)
+
+class User_1(models.Model):
+    username = models.CharField(max_length=50)
+    following = models.ManyToManyField('self', symmetrical=False, related_name='followers',blank=True)
+
 
 
 class Product_Forign(models.Model):
     title = models.CharField(max_length=100)
     customer = models.ForeignKey("Customer",on_delete=models.CASCADE)
 
+
     class Meta:
         abstract = True
 
+def set_def():
+    return 1
+
+# from django.contrib.auth.models import AbstractUser
+
+# class CustomUser(AbstractUser):
+#     # Add custom fields or methods if needed
+#     pass
+
+# class UserProfile(models.Model):
+#     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+
+class ForignOpts(models.Model):
+    product_forign = models.ForeignKey(CheckUUID,on_delete = models.PROTECT)
+    filed_c3 = models.ForeignKey(FieldCheck3,on_delete = models.RESTRICT,to_field='URL')
+    filed_c2 = models.ForeignKey(FieldTypesCheckL2,on_delete = models.SET_NULL,null=True)
+    filed_l = models.ForeignKey(FieldTypesCheckL,on_delete = models.SET_DEFAULT,default=1)
+    dis = models.ForeignKey(Discount,on_delete = models.SET_DEFAULT,default=1)
+    dis_info = models.ForeignKey(DiscountInfo,on_delete = models.SET(set_def))
+    se_itm = models.ForeignKey(StockEntry,on_delete = models.DO_NOTHING)
+    b = models.ForeignKey(Book,on_delete = models.DO_NOTHING,limit_choices_to = {"author":1},related_name='+')
 
 
 def validate_test(value):
