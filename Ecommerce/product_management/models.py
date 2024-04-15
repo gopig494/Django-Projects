@@ -348,6 +348,27 @@ class Child(Parent):
 class Parent_2(models.Model):
     parent_field = models.CharField(max_length=100)
 
+class DescriptorClass:
+    def __init__(self, field_type):
+        print("-----field_type",field_type)
+        self.field_type = field_type
+        self._value = None
+
+    def __get__(self, instance, owner):
+        print("Getting value...")
+        return self._value
+
+    def __set__(self, instance, value):
+        print("Setting value...")
+        if not isinstance(value, self.field_type):
+            raise ValueError(f"Expected {self.field_type.__name__}, got {type(value).__name__}")
+        self._value = value
+
+
 class Child2(Parent_2):
     child_fields_1 = models.CharField(max_length=100)
     parent_links_1 = models.OneToOneField(Parent, on_delete=models.CASCADE,related_name = "child2",related_query_name="child_2_query")
+    descrip = DescriptorClass(field_type = models.CharField(max_length=100))
+
+name_field_type = Child2._meta.get_field('child_fields_1').get_internal_type()
+print("-----------------name_field_type----------------",name_field_type)
