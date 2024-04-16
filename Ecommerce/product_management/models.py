@@ -385,12 +385,13 @@ print("-----------------name_field_type_4----------------",name_field_type_4)
 class Car(models.Model):
     title = models.CharField(max_length=100,null = True, blank=True)
     price = models.DecimalField(max_digits=10,decimal_places=2)
+    model_nos = models.CharField(max_length=100,unique=True)
 
     def clean_fields(self, exclude=None):
         print("-----------------clean_fields----------------")
         super().clean_fields(exclude=exclude)
         # Custom validation logic
-        if self.price or -1 < 0:
+        if self.price and self.price < 0:
             raise ValidationError({"price":"price cannot be negative."})
     
     def clean(self):
