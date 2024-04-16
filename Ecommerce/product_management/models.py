@@ -371,4 +371,12 @@ class Child2(Parent_2):
     descrip = DescriptorClass(field_type = models.CharField(max_length=100))
 
 name_field_type = Child2._meta.get_field('child_fields_1').get_internal_type()
+from django.db import connections
+connection = connections['default']
+name_field_type_2 = Child2._meta.get_field('child_fields_1').db_type(connection= connection)
+name_field_type_3 = Child2._meta.get_field('child_fields_1').rel_db_type(connection= connection)
+name_field_type_4 = Child2._meta.get_field('id').auto_created
 print("-----------------name_field_type----------------",name_field_type)
+print("-----------------name_field_type_2----------------",name_field_type_2)
+print("-----------------name_field_type_3----------------",name_field_type_3)
+print("-----------------name_field_type_4----------------",name_field_type_4)
