@@ -380,3 +380,65 @@ print("-----------------name_field_type----------------",name_field_type)
 print("-----------------name_field_type_2----------------",name_field_type_2)
 print("-----------------name_field_type_3----------------",name_field_type_3)
 print("-----------------name_field_type_4----------------",name_field_type_4)
+
+
+class Car(models.Model):
+    title = models.CharField(max_length=100,null = True, blank=True)
+    price = models.DecimalField(max_digits=10,decimal_places=2)
+
+    def clean_fields(self, exclude=None):
+        print("-----------------clean_fields----------------")
+        super().clean_fields(exclude=exclude)
+        # Custom validation logic
+        if self.price or -1 < 0:
+            raise ValidationError({"price":"price cannot be negative."})
+    
+    def clean(self):
+        print("-----------------clean----------------")
+        # Call the super clean method to ensure any parent class clean() methods are called.
+        super().clean()
+        if not self.title:
+            raise ValidationError({"title":"title needed"})
+
+    def validate_unique(self,exclude=None):
+        print("-----------------validate unique----------------")
+        # Call the super clean method to ensure any parent class clean() methods are called.
+        super().validate_unique()
+        if not self.title:
+            raise ValidationError({"title":"title needed"})
+    
+    def validate_constraints(self,exclude=None):
+        print("-----------------validate unique----------------")
+        # Call the super clean method to ensure any parent class clean() methods are called.
+        super().validate_constraints()
+        if not self.title:
+            raise ValidationError({"title":"title needed"})
+    
+
+    def full_clean(self,exclude=None, validate_unique=True, validate_constraints=True):
+        super().full_clean(exclude=None, validate_unique=True, validate_constraints=True)
+
+
+    @classmethod
+    def create(cls,**kwargs):
+        print("-----------------create----------------",kwargs)
+        book = cls(title = kwargs.get("title"))
+        return book
+    
+    @classmethod
+    def from_db(cls, db, field_names, values):
+        instance = super().from_db(db, field_names, values)
+        print("-----------------------------------cls method callings--------------------------------")
+        return instance
+
+    def save(self, *args, **kwargs):
+        print("-----------------save----------------calling",)
+        super().save(*args, **kwargs)
+
+    def refresh_from_db(self, using=None, fields=None, **kwargs):
+        print("-----------------refresh_from_db----------------calling",)
+        super().refresh_from_db(using, fields, **kwargs)
+
+    
+    
+# book_1 = Car.create(title = "book 1")
