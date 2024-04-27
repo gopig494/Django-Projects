@@ -1,0 +1,25 @@
+{% if all_blog %}
+
+    {% for b in all_blog %}
+        <h4>{{b | safe}}</h4>
+    {% endfor %}
+{% endif %}
+
+{% if entry %}
+
+    <h4>{{entry | safe}}</h4>
+
+{% endif %}
+
+{% if all_entry %}
+
+    {% for e in all_entry %}
+        <h4>{{e | safe}}</h4>
+    {% endfor %}
+{% endif %}
+
+{% if message %}
+    {{message}}
+{% endif %}
+
+

@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "product_management",
     "customer",
-    "rest_framework"
+    "rest_framework",
+    "Learning_ORM_queries"
 ]
 
 MIDDLEWARE = [
