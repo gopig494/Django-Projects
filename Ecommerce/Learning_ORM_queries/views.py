@@ -2,7 +2,8 @@ from django.shortcuts import render
 from Learning_ORM_queries.models import *
 from django.http.response import HttpResponse
 import datetime
-from django.db.models import Q,F,Min,Avg,Max,Sum,Count,Subquery,OuterRef
+from django.db.models import Q,F,Min,Avg,Max,Sum,Count,Subquery,OuterRef,Value,JSONField
+from django.db.models.fields.json import KT
 
 # Create your views here.
 
@@ -22,6 +23,54 @@ def creating_blog(request):
     new_blog = Blog.objects.create(name = "C3 Bike Travel",tagline = "Bike Around Chennai")
     
     return render(request,"learning_orm_queries/index.html",{"info":new_blog})
+
+def update_blog(request):
+    blogs = Blog.objects.filter(name__contains = "Travel").update(name="I got bike")
+
+    # # update forign key
+    b = Blog.objects.get(pk=1)
+
+    # # Change every Entry so that it belongs to this Blog.
+    Entry.objects.update(blog=b)
+
+    b = Blog.objects.get(pk=1)
+
+    # Update all the headlines belonging to this Blog.
+
+    Entry.objects.filter(blog=b).update(headline="Everything is the same")
+
+    # using F expression
+    Entry.objects.update(number_of_pingbacks=F("number_of_pingbacks") + 1)
+
+    # if we using value from forign key field it will rise error
+
+    Entry.objects.update(headline=F("blog__name"))
+
+    # remove forign key relationship but the model field should set as null
+    e = Entry.objects.get(id=2)
+    e.blog = None
+    e.save() 
+
+    e = Entry.objects.get(id=2)
+    print(e.blog)  # Hits the database to retrieve the associated Blog.
+    print(e.blog)  # Doesn't hit the database; uses cached version.
+
+    e = Entry.objects.select_related().get(id=2)
+    print(e.blog)  # Doesn't hit the database; uses cached version.
+    print(e.blog)  # Doesn't hit the database; uses cached version.
+
+    # access the entry data from forign key table
+    b = Blog.objects.get(id=1)
+    b.entry_set.all()  # Returns all Entry objects related to Blog.
+
+    # b.entry_set is a Manager that returns QuerySets.
+    b.entry_set.filter(headline__contains="Lennon")
+    b.entry_set.count()
+
+
+
+    return HttpResponse("updated")
+
 
 def get_blog(request):
     all_blog = Blog.objects.all().values()
@@ -53,6 +102,27 @@ def creating_entry(request):
     entry.save()
     entry.authors.add(1)
     entry.save()
+
+    # copy and duplicate
+    # many to many field are not copied we have to set it
+    # which is applicable for one to one field also
+    entry = Entry.objects.all()[0]  # some previous entry
+    old_authors = entry.authors.all()
+    entry.pk = None
+    entry._state.adding = True
+    entry.save()
+    entry.authors.set(old_authors)
+    
+    # how to add and set and clear one to one fields and may tot many tot many fields
+    entry = Entry.objects.get(pk = 1)
+    entry.blog = Blog.objects.get(pk=73)
+    # add will add extra values like append
+    entry.authors.add(1)
+    entry.authors.clear()
+    # set will set like assign operator
+    entry.authors.set([1,2])
+    entry.save()
+
     return render(request,"learning_orm_queries/index.html",{"entry":entry})
 
 def get_entry(request):
@@ -188,7 +258,7 @@ def get_entry(request):
     all_entry = Entry.objects.all().values() 
     all_entry = all_entry[5].values()
 
-    all_entry = all_entry[5].values() #again database query eill be executed
+    # all_entry = all_entry[5].values() #again database query eill be executed
 
     #in this case caching will happened
     all_entry = Entry.objects.all().values() 
@@ -196,11 +266,108 @@ def get_entry(request):
 
     all_entry = all_entry[5].values() #here the caching data is used
 
-    all_entry = all_entry[5].values() #here also the caching data is used
+    # all_entry = all_entry[5].values() #here also the caching data is used
 
-    async def l():
-    
-        async for entry in Entry.objects.all():
-            pass
 
+    # async in python this is not correct // just tried
+    # import time
+    # async def l():
+    #     for entry in enumerate(Entry.objects.all()):
+    #         await time.sleep(2)
+    #         print("----------count")
+    # l()
+    # all_entry = await Entry.objects.all().values().afirst()
+
+    all_entry = [Entry.objects.count()]
+    all_entry = [Entry.objects.exists()]
+    all_entry = [Entry.objects.filter(headline__contains="travel").exists()]
+
+    # from forn key field or onr to one or many to many field access.
+    blog = Author.objects.get(pk=1)
+    all_entry = blog.entry_set.all()
     return render(request,"learning_orm_queries/index.html",{"all_entry":all_entry,"message":msg})
+
+def create_production(request):
+    pro = Production()
+    pro.values = Value(None,JSONField())
+    pro.name = "Gopi"
+    pro.save()
+
+    pro = Production()
+    pro.values = None
+    pro.name = "Gopi"
+    pro.save()
+
+    pro = Production()
+    pro.values = {"name":"Gopi","location":"comibatore",1:"nos","experience":{"software":"IT","reviews":[{"exp":"worest"}]}}
+    pro.name = "Gopi"
+    pro.save()
+
+    # copy or dubplicate
+    pro.pk = None
+    pro._state.adding = True
+    pro.save()
+
+
+    # json field we can use the json key to filter the record like below location key is used
+
+    all_entry = Production.objects.filter(values__location = "comibatore").values()
+
+    return render(request,"learning_orm_queries/index.html",{"all_entry":all_entry})
+
+
+def get_production(request):
+    # json field we can use the json key to filter the record like below location key is used
+
+    all_entry = Production.objects.filter(values__location = "chennai").values()
+
+    #nested key
+
+    all_entry = Production.objects.filter(values__experience__software = "IT").values()
+
+    # if the json contaies list we can use idx to filter
+    all_entry = Production.objects.filter(values__experience__reviews__0__exp = "worest").values()
+
+    # we can query null values also
+    all_entry = Production.objects.filter(values__experience__software__isnull = False).values()
+
+    # filter by another json values itself
+    all_entry = Production.objects.filter(values__experience__software = KT("values__experience__software")).values()
+
+    # using orderby
+
+    all_entry = Production.objects.order_by("values__experience__software").filter(values__experience__software = KT("values__experience__software")).values()
+
+    # using contains we can use but in sqlite which is not supported
+
+    # all_entry = Production.objects.filter(values__experience__reviews__contains = [{"exp":"worest"}]).values()
+
+    # all_entry = Production.objects.filter(values__contains = {"location":"comibatore"})
+
+    # all_entry = Production.objects.filter(values__experience__reviews__0__contains = {"exp":"worest"}).values()
+
+    # using contained by
+    # all_entry = Production.objects.filter(values__contained_by = {"location":"comibatore"})
+
+    # by using hey
+    # all_entry = Production.objects.filter(values__has_key = "location")
+
+    # all keys must be there
+    # all_entry = Production.objects.filter(values__has_keys = ["location","name"])
+
+    # any one of key
+    # all_entry = Production.objects.filter(values__has_any_keys = ["location","name"])
+
+
+    # print("---------all_entry",all_entry)
+
+    return render(request,"learning_orm_queries/index.html",{"all_entry":all_entry})
+
+def delete_production(request):
+    obj = Production.objects.get(id=3)
+    obj.delete()
+
+    obj = Production.objects.filter(id=4)
+    obj.delete()
+
+    return HttpResponse("ok")

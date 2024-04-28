@@ -38,3 +38,7 @@ class Entry(models.Model):
     def __str__(self):
         return self.headline
   
+class Production(models.Model):
+    name = models.CharField(max_length=100)
+    values = models.JSONField(null=True)
+

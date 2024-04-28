@@ -9,3 +9,4 @@ class BlogModelAdmin(admin.ModelAdmin):
 admin.site.register(Blog,BlogModelAdmin)
 admin.site.register(Author)
 admin.site.register(Entry)
+admin.site.register(Production)
