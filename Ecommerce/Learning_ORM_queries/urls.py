@@ -10,6 +10,7 @@ urlpatterns = [
     path("create_production/",create_production),
     path("get_production/",get_production),
     path("delete_production/",delete_production),
+    path("get_entry_api/",get_entry_api),
 ] 
 
 

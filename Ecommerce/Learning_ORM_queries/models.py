@@ -34,6 +34,7 @@ class Entry(models.Model):
     number_of_comments = models.IntegerField(default=0)
     number_of_pingbacks = models.IntegerField(default=0)
     rating = models.IntegerField(default=5)
+    modified = models.DateTimeField(blank=True,null=True)
 
     def __str__(self):
         return self.headline
@@ -41,4 +42,5 @@ class Entry(models.Model):
 class Production(models.Model):
     name = models.CharField(max_length=100)
     values = models.JSONField(null=True)
-
+    entry = models.ForeignKey(Entry, on_delete=models.CASCADE,related_name="entry_forign")
+    entries = models.ManyToManyField(Entry)

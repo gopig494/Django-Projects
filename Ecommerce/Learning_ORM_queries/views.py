@@ -2,8 +2,9 @@ from django.shortcuts import render
 from Learning_ORM_queries.models import *
 from django.http.response import HttpResponse
 import datetime
-from django.db.models import Q,F,Min,Avg,Max,Sum,Count,Subquery,OuterRef,Value,JSONField
+from django.db.models import Q,F,Min,Avg,Max,Sum,Count,Subquery,OuterRef,Value,JSONField,CharField, Case, When
 from django.db.models.fields.json import KT
+from django.db.models.functions import Lower,Coalesce,Upper
 
 # Create your views here.
 
@@ -285,6 +286,8 @@ def get_entry(request):
     # from forn key field or onr to one or many to many field access.
     blog = Author.objects.get(pk=1)
     all_entry = blog.entry_set.all()
+
+    
     return render(request,"learning_orm_queries/index.html",{"all_entry":all_entry,"message":msg})
 
 def create_production(request):
@@ -371,3 +374,234 @@ def delete_production(request):
     obj.delete()
 
     return HttpResponse("ok")
+
+# learning queryset api reference
+
+
+def get_entry_api(request):
+    # converting list
+    # using all
+    all_entry = list(Entry.objects.all())
+    # print("------------all entry",all_entry)
+
+    q = Blog.objects.annotate(Count("entry"))
+    # The number of entries on the first blog
+    # all_entry = [q[0].entry__count]
+    all_entry = q.values()
+
+    q = Blog.objects.annotate(entry_count = Count("entry"))
+    all_entry = q.values()
+
+    all_entry = Blog.objects.aggregate(entries=Count("entry")).values()
+
+    # using alias
+    all_entry = Blog.objects.alias(entries=Count("entry")).filter(entries__exact=5)
+    all_entry = Blog.objects.annotate(entries=Count("entry")).filter(entries__exact=5)
+
+    all_entry = Blog.objects.alias(entries=Count("entry")).annotate(entries=F("entries")).aggregate(Sum("entries")).values()
+
+    
+    # order by
+    all_entry = Entry.objects.all().order_by("headline").values()
+    for al in all_entry:
+        al = Entry.objects.get(pk=al.get("id"))
+
+    all_entry = Entry.objects.select_related().all().order_by("headline").values()
+    for al in all_entry:
+        al = Entry.objects.select_related().get(pk=al.get("id"))
+
+    all_entry = Entry.objects.all().order_by("headline")
+    
+    # order randomly not linearly use
+
+    all_entry = Entry.objects.all().order_by("?")
+
+    # order by forign key field and many to many field
+
+    all_entry = Entry.objects.all().order_by("authors__name")
+
+    # by default it order asc but we can use - to DESC order
+
+    all_entry = Entry.objects.all().order_by("-blog__name").values()
+
+    # use asc and desc
+
+    # all_entry = Entry.objects.all().order_by(Colalesce("blog__name").asc).values()
+
+    # using case when
+
+    all_entry = Entry.objects.annotate(
+                        sorted_headline=Case(
+                            When(headline__isnull=True, then=Value('')),  # Replace null values with empty string
+                            default=F('headline'),  # Use headline if not null
+                            output_field=CharField(),  # Specify output field type
+                        )
+                                ).order_by('sorted_headline')
+    
+
+    # we can use lower and upper to order by
+
+    # all_entry = Entry.objects.order_by(Lower("headline").desc())
+
+    # we use reverse to reverse the order
+    
+    all_entry = Entry.objects.all().order_by('id').reverse().values()
+    all_entry = Entry.objects.all().order_by('id').values()
+
+    all_entry = Entry.objects.distinct("pub_date").all().values()
+
+    # we have to use order by first then use distict 
+    # the distict fields must be specified in order by the fields only can speecify in distinct.
+
+    all_entry = Entry.objects.order_by("pub_date").distinct("pub_date").all().values() 
+
+    all_entry = Blog.objects.values("name")
+
+    all_entry = Blog.objects.values(lower_name=Lower("name"))
+
+    all_entry = Blog.objects.values(lower_name=Upper("name"))
+
+    all_entry = customized_lookup_values()
+
+    return render(request,"learning_orm_queries/index.html",{"all_entry":all_entry})
+
+
+def customized_lookup_values():
+
+    # customized lookups for select query
+
+    CharField.register_lookup(Lower)
+
+    all_entry = Blog.objects.all().values("name__lower")
+
+    # use group by in values itself by not using annotate
+
+    all_entry = Blog.objects.values("entry__authors",entries = Count("entry"))
+
+    all_entry = Blog.objects.values("entry__authors").annotate(entries=Count("entry"))
+
+    all_entry = Blog.objects.values(entry__authors__name__lower=Lower("entry__authors__name")).annotate(entries=Count("entry"))
+
+    all_entry = Blog.objects.values().order_by("id")
+    all_entry = Blog.objects.order_by("id").values()
+
+    # values_list
+
+    all_entry = Blog.objects.order_by("id").values_list()
+
+    # using flat
+
+    all_entry = Blog.objects.order_by("id").values_list(flat=True)
+
+    # using named
+
+    all_entry = Blog.objects.order_by("id").values_list(named=True)
+
+    # using get
+
+    all_entry = Blog.objects.order_by("id").values_list().get(id=73)
+
+    # using filter
+
+    all_entry = Blog.objects.values_list().filter(id=73)
+
+    # many to many field
+
+    all_entry = Author.objects.values_list("name", "entry__headline")
+
+    all_entry = Author.objects.values("name", "entry__headline")
+
+    all_entry = Entry.objects.values_list("authors__name")
+
+    # dates function
+
+    # datetimes(field_name, kind, order='ASC', tzinfo=None)
+
+    all_entry = Entry.objects.dates("pub_date","day", order="DESC")
+
+    all_entry = Entry.objects.dates("pub_date","week")
+
+    all_entry = Entry.objects.dates("pub_date","year")
+
+    all_entry = Entry.objects.dates("pub_date","month")
+
+    all_entry = Entry.objects.dates("pub_date","day", order="ASC")
+
+    all_entry = Entry.objects.filter(headline__contains="checking").datetimes("modified", "day")
+
+    all_entry = Entry.objects.filter(headline__contains="checking").datetimes("modified", "month")
+
+    all_entry = Entry.objects.filter(headline__contains="checking").datetimes("modified", "year")
+
+    all_entry = Entry.objects.filter(headline__contains="checking").datetimes("modified", "hour")
+
+    all_entry = Entry.objects.filter(headline__contains="checking").datetimes("modified", "minute")
+
+    all_entry = Entry.objects.filter(headline__contains="checking").datetimes("modified", "second")
+
+    all_entry = Entry.objects.all()
+    
+    # union interseaction difference
+
+    qs1 = Author.objects.values_list("name")
+    qs2 = Entry.objects.values_list("headline")
+    all_entry = qs1.union(qs2).order_by("name")
+
+    s = {1,2}
+    d = {1,3}
+
+    print(s.union(d))
+    print(s.difference(d))
+    print(s.symmetric_difference(d))
+
+    all_entry = qs1.difference(qs2).order_by("name")
+
+    # allow dublicates
+
+    all_entry = qs1.union(qs2,all=True)
+
+    # select related tables in sigle query 
+
+    # Hits the database.
+    e = Entry.objects.get(id=34)
+
+    # Hits the database again to get the related Blog object.
+    b = e.blog
+
+    # Hits the database.
+    e = Entry.objects.select_related("blog").get(id=34)
+
+    # Doesn't hit the database, because e.blog has been prepopulated
+    # in the previous query.
+    b = e.blog
+
+    all_entry = Entry.objects.select_related("blog").all().values()
+
+    # it will work only for forignkeys
+    # get forign key table values then the forign key forign key values.
+
+    all_entry = Production.objects.select_related("entry__blog").all().values()
+
+    # want to fetch all realted data values not specific
+    all_entry = Production.objects.select_related().all().values()
+
+    # for many to many field 
+    all_entry = Entry.objects.prefetch_related("authors")
+
+    all_entry = Entry.objects.prefetch_related("authors").values()
+
+    # avoid using like it
+    auths = Entry.objects.prefetch_related("authors") #hits database
+    all_entry = [list(a.authors.filter(name__contains="g")) for a in auths] #hits database
+
+    all_entry = Production.objects.prefetch_related("entries__authors").all().values()
+
+    #use both prefetched and select related
+
+    all_entry = Production.objects.select_related("entry").prefetch_related("entry__authors").values()
+
+    # set prefetched value none or clear them use
+
+    all_entry.prefetch_related(None)
+
+    return all_entry
