@@ -2,7 +2,7 @@ from django.shortcuts import render
 from Learning_ORM_queries.models import *
 from django.http.response import HttpResponse
 import datetime
-from django.db.models import Q,F,Min,Avg,Max,Sum,Count,Subquery,OuterRef,Value,JSONField,CharField, Case, When
+from django.db.models import Q,F,Min,Avg,Max,Sum,Count,Subquery,OuterRef,Value,JSONField,CharField, Case, When,Prefetch
 from django.db.models.fields.json import KT
 from django.db.models.functions import Lower,Coalesce,Upper
 
@@ -594,14 +594,235 @@ def customized_lookup_values():
     auths = Entry.objects.prefetch_related("authors") #hits database
     all_entry = [list(a.authors.filter(name__contains="g")) for a in auths] #hits database
 
-    all_entry = Production.objects.prefetch_related("entries__authors").all().values()
+    all_entry = Production.objects.prefetch_related("entries").all().values()
 
     #use both prefetched and select related
 
-    all_entry = Production.objects.select_related("entry").prefetch_related("entry__authors").values()
+    all_entry = Production.objects.select_related("entry").prefetch_related("entries")
+
+    for k in all_entry:
+        entries = k.entries.all()
+        # print("-------entries",entries)
 
     # set prefetched value none or clear them use
 
     all_entry.prefetch_related(None)
 
+    # many to many field fetch specific many to many field only
+
+    all_entry = Production.objects.prefetch_related(Prefetch("entries")).all()
+
+    for k in all_entry:
+        entries = k.entries.all()
+
+    # use order by for many to many field
+
+    all_entry = Production.objects.prefetch_related(Prefetch("entries",queryset = Entry.objects.order_by("-id")))
+
+    for k in all_entry:
+        entries = k.entries.all()
+
+    # fetch the many to many field having forign key.
+
+    all_entry = Production.objects.prefetch_related(Prefetch("entries",queryset = Entry.objects.select_related("blog"))).all()
+
+    for k in all_entry:
+        if k:
+            entries = k.entries.all()
+            # print('--------entries',entries)
+            # if entries:
+                # print("-------------entry found")
+            if entries:
+                for m in entries:
+                    blog_id = m.blog.id
+                    # print("----------blog_id",blog_id)
+    
+    # fetch the many to many field having many to many field.
+
+    all_entry = Production.objects.prefetch_related(Prefetch("entries",queryset = Entry.objects.prefetch_related("authors"))).all()
+
+    for k in all_entry:
+        if k:
+            entries = k.entries.all()
+            # print('--------entries',entries)
+            # if entries:
+                # print("-------------entry found")
+            if entries:
+                for m in entries:
+                    auths = m.authors.all()
+                    # print("----------auths",auths)
+
+    # fetch many to many field of many to many field only
+
+    all_entry = Production.objects.prefetch_related(Prefetch("entries__authors",to_attr="menu"))
+
+    for k in all_entry:
+        if k:
+            entries = k.entries.all()
+            if entries:
+                for m in entries:
+                    auths = m.authors.all()
+                    # print("----------auths",auths)
+
+
+    # using filter in prefetch
+
+    all_entry = Production.objects.prefetch_related(Prefetch("entries",queryset=Entry.objects.filter(headline__startswith="c"),to_attr="menu"))
+
+    for k in all_entry:
+        if k:
+            entries = k.menu
+            for a in entries:
+                # print("----------a",a.headline)
+                # print("----------a",a.blog)
+                pass
+
+    # using only # fetch necessary fields only
+
+    all_entry = Production.objects.prefetch_related(Prefetch("entries",queryset=Entry.objects.only("headline").filter(headline__startswith="c"),to_attr="menu"))
+
+    for k in all_entry:
+        if k:
+            entries = k.menu
+            for a in entries:
+                print("----------a",a.headline)
+                print("----------a",a.blog)
+    
+
+    # fetch data from different database by using the keyword 'using
+
+    # # Both inner and outer queries will use the 'replica' database
+    # Restaurant.objects.prefetch_related("pizzas__toppings").using("replica")
+    # Restaurant.objects.prefetch_related(
+    # Prefetch("pizzas__toppings"),).using("replica")
+
+    # # Inner will use the 'replica' database; outer will use 'default' database
+    # Restaurant.objects.prefetch_related(
+    # Prefetch("pizzas__toppings", queryset=Toppings.objects.using("replica")),)
+
+    # # Inner will use 'replica' database; outer will use 'cold-storage' database
+    # Restaurant.objects.prefetch_related(
+    # Prefetch("pizzas__toppings", queryset=Toppings.objects.using("replica")),).using("cold-storage")'
+    
+
     return all_entry
+
+
+# how to use custom sql with django orm which means combination of sql and django ORM
+
+def learn_extra(request):
+
+    # adding count of entries to each field
+
+    all_entry = Entry.objects.extra(select={"count_entry":"SELECT COUNT(id) FROM Learning_ORM_queries_entry"}).values()
+
+    # mixing the orm field and then the subquery field in subquery where condition
+
+    all_entry = Entry.objects.extra(select={"count_entry":"SELECT COUNT(id) FROM Learning_ORM_queries_blog WHERE id = Learning_ORM_queries_entry.blog_id"}).values()
+
+    # using select params to pass a value the the where condition
+    
+    all_entry = Entry.objects.extra(select={"count_entry":"""
+                                        SELECT 
+                                            COUNT(id) FROM Learning_ORM_queries_blog 
+                                        WHERE 
+                                            name = %s """},
+                                    select_params=('finally',)).values()
+    
+    # two subquery
+
+    all_entry = Entry.objects.extra(select={"count_entry":"""
+                                        SELECT 
+                                            COUNT(id) FROM Learning_ORM_queries_blog 
+                                        WHERE 
+                                            name = %s """,
+                                            "ee":"""
+                                        SELECT 
+                                            COUNT(id) FROM Learning_ORM_queries_blog 
+                                        WHERE 
+                                            name = %s """},
+                                    select_params=('finally','finally',)).values()
+
+    # add additional where condition to the ORM 
+
+    # this is the example of how we use OR and AND condition in where clause
+
+    all_entry = Entry.objects.extra(where=["headline LIKE '%2%' OR headline = 'Checking Entry'","number_of_comments = 1"]).values('headline')
+
+    # using Order by
+
+    all_entry = Entry.objects.extra(order_by=["-rating"]).values('headline','rating')
+
+    # adding dynamic where condition
+
+    all_entry = Entry.objects.extra(where=["headline=%s"],params=["Checking Entry",]).values('headline','rating')
+
+
+    # rawsql
+
+    # qs.annotate(val=RawSQL("select col from sometable where othercol = %s", ('s',)))
+
+    # learn about defer 
+
+    # defer is used to delay the sql excution for particular field
+
+    # then when the execution start mean when you tring to access it like below
+
+    all_entry = Entry.objects.defer("headline", "body").values()
+
+    # all_entry.headline  #here the additional sql query executed
+
+    # use defer for related models
+
+    all_entry = Blog.objects.select_related().defer("entry__headline", "entry__body_text")
+
+    # cancel or remove all the defer we can use
+    
+    all_entry =all_entry.defer(None)
+
+    # learn about only
+
+    #it wii only load the headline and bodytext when executed another important info is we can access another fields
+
+    # like blog,rating the difference is the extra sql query excuted when we trying to use the blog and rating
+
+    all_entry = Entry.objects.only("headline", "body_text").values()
+
+    # the id also fetched which means three fields are fetched
+    all_entry = Entry.objects.only("headline", "body_text").values('id')
+
+    # in this case the lase only fields only will be fetched and cached which mean id field only cached
+    all_entry = Entry.objects.only("headline", "body_text").only('id')
+
+    # dffer vs only
+
+    # When calling save() for instances with deferred fields, only the loaded fields will be saved. See save() for more details.
+
+    # assume the entry table having only the headline and body_text field.
+
+    # so here the first line the two fields defer so the id field data only fetched same in line 2
+
+    all_entry = Entry.objects.defer("headline", "body_text")
+    all_entry = Entry.objects.only("id")
+
+    # Final result is that everything except "headline" is deferred.
+    Entry.objects.only("headline", "body_text").defer("body_text")
+
+    # Final result loads headline immediately.
+    Entry.objects.defer("body_text").only("headline", "body_text")
+
+    # here the there is not values cached during evaluation the sql excute and get all the field values.
+
+    # When using defer() after only() the fields in defer() will override only() for fields that are listed in both.
+
+    all_entry = Entry.objects.only().values()
+
+    # learn the using function
+
+    # queries the database with the 'default' alias.
+    all_entry = Entry.objects.all()
+
+    # queries the database with the 'backup' alias
+    all_entry = Entry.objects.using("backup")
+
+    return render(request,"learning_orm_queries/index.html",{"all_entry":all_entry})

@@ -11,6 +11,7 @@ urlpatterns = [
     path("get_production/",get_production),
     path("delete_production/",delete_production),
     path("get_entry_api/",get_entry_api),
+    path("learn_extra/",learn_extra),
 ] 
 
 
