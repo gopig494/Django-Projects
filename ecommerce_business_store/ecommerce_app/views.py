@@ -14,7 +14,7 @@ def index(request):
 
 def customer_register(request):
     form = CustomerInfo()
-    if request.method == "POST":
+    if request.method == "POST": 
         form = CustomerInfo(request.POST)
         if form.is_valid():
             form.save()
