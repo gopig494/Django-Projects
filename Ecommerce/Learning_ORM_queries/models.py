@@ -17,7 +17,7 @@ class Blog(models.Model):
 
 
 class Author(models.Model):
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200,unique=True)
     email = models.EmailField()
 
     def __str__(self):

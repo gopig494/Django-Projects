@@ -5,6 +5,7 @@ import datetime
 from django.db.models import Q,F,Min,Avg,Max,Sum,Count,Subquery,OuterRef,Value,JSONField,CharField, Case, When,Prefetch
 from django.db.models.fields.json import KT
 from django.db.models.functions import Lower,Coalesce,Upper
+import django
 
 # Create your views here.
 
@@ -823,6 +824,260 @@ def learn_extra(request):
     all_entry = Entry.objects.all()
 
     # queries the database with the 'backup' alias
-    all_entry = Entry.objects.using("backup")
+    # all_entry = Entry.objects.using("backup")
 
     return render(request,"learning_orm_queries/index.html",{"all_entry":all_entry})
+
+def lock_transaction(request):
+    from django.db import transaction
+    entry_all = []
+    # general method
+    all_entry = Entry.objects.select_for_update().all()
+    with transaction.atomic():
+        for entry in all_entry:  # here the all matched querset rows are locked which means they are not availbel to change the data or access
+            # if the query is already locked by using the same method in another call , the query will be blocked untill the lock is released
+            pass
+        
+        
+    # if the query is already locked by using the same method in another call , the query will be '''**not**''' blocked untill the lock is released
+    # like its normal flow to access the data
+    # if we trying to access in another method the ''' DatabaseError  ''' will rise like below
+    # for example the query is locked by another fuction and here we are using nowait = true so the below code attempt to execute the code in this case the datbase error will rised
+    all_entry = Entry.objects.select_for_update(nowait=True).all()
+    with transaction.atomic():
+        for entry in all_entry:  
+            pass
+    
+    # by refer the previous scnario if you dont want to rise database error we can use like below
+    all_entry = Entry.objects.select_for_update(skip_locked=True).all()
+    with transaction.atomic():
+        for entry in all_entry: 
+            pass
+    
+    # if we use like below the '''values error wil rise'''
+    # nowait-true,skip_locked=true together
+    # all_entry = Entry.objects.select_for_update(nowait=True,skip_locked=True).all()
+    # with transaction.atomic():
+    #     for entry in all_entry: 
+    #         pass
+    
+    #  lock forign key models 
+    all_entry = Entry.objects.select_for_update(of=("self","blog_ptr")).all()
+    with transaction.atomic():
+        for entrys in all_entry: 
+            entry_all.append(entrys)
+
+    # apply lock for single field
+    all_entry = Entry.objects.select_for_update("headline").select_related().all()
+
+    # we can't use the 'select for update ' for null type fields
+    # to avoid the error we can use
+    all_entry = Entry.objects.select_for_update("headline").select_related().exclude(headline = None).all()
+
+    return render(request,"learning_orm_queries/index.html",{"all_entry":all_entry or entry_all})
+
+def and_or(request):
+    entry_all = []
+    # and condition
+    all_entry = Entry.objects.filter(headline__startswith="C").filter(rating = 3)
+    all_entry = Entry.objects.filter(headline__startswith="C",rating = 3)
+
+    all_entry = Entry.objects.filter(Q(headline__startswith="C") & Q(rating = 3))
+    all_entry = Entry.objects.filter(headline__startswith="C") & Entry.objects.filter(rating = 3)
+
+    # or condition
+
+    all_entry = Entry.objects.filter(Q(headline__startswith="C") | Q(rating = 3))
+    all_entry = Entry.objects.filter(headline__startswith="C") | Entry.objects.filter(rating = 3)
+
+    # xor
+
+    # Model.objects.filter(x=1) ^ Model.objects.filter(y=2)
+    # from django.db.models import Q
+
+    # Model.objects.filter(Q(x=1) ^ Q(y=2))
+
+    # learn about get
+
+    # we can fetch many to many field and forigkey values in get
+
+    all_entry = Entry.objects.get(pk = 34)
+
+    # print('???????????????????????????/////////////////////////////////////',all_entry.authors.all())
+    
+    # but in filter we ca't get the many to many field values
+
+    all_entry = Entry.objects.filter(pk = 34)
+
+    # print('???????????????????????????/////////////////////////////////////',all_entry.authors.all())
+
+    # if we want to get many to many field in filter we need to use like below
+
+    all_entry = Entry.objects.filter(pk = 34).get()
+
+    # print('???????????????????????????/////////////////////////////////////',all_entry.authors.all())
+
+    # this is the asynchronus call
+
+    all_entry = [Entry.objects.aget(pk = 34)]
+
+    print('???????????????????????????/////////////////////////////////////',all_entry)
+
+    # if we get more than one record the multiple objects returns error eill rise 
+    # if we do not get any values it will rise the doesnot exists error
+
+    return render(request,"learning_orm_queries/index.html",{"all_entry":all_entry or entry_all})
+
+def crud(request):
+    entry_all = []
+    # get
+    all_entry = [Entry.objects.get(pk = 34)]
+    # async version
+    # it will not wait to fetch the data so there no data print in index.html
+    all_entry = [Entry.objects.aget(pk = 34)]
+
+    # create
+
+    # all_entry = Blog.objects.create(name="Soga kathai",tagline="bhai")
+
+    # async version #this is not correct way just trying
+    # async def create_blog():
+    #     globals()["all_entry"] = await Blog.objects.acreate(name="async Soga kathai",tagline="async bhai")
+    # create_blog()
+
+    # another way to create
+    # when use create a primary key with ourself the force insert will be useful 
+    # the primary key 1 alreay exists by default the save method will update the record not insert
+    # in this above swtchuation we can use the forcew insert true it will rise unique contraints error so we canm handle the exception
+    # and generate the new primary ley
+    all_entry = Blog(name="force insert Soga kathai",tagline="force insert bhai",pk=1)
+    # all_entry.save(force_insert=True)
+    try:
+        all_entry = Blog(name="force insert Soga kathai",tagline="force insert bhai",pk=1)
+        all_entry.save(force_insert=True)
+        all_entry = [all_entry]
+    except django.db.utils.IntegrityError:
+        pass
+
+    # get or create method
+    # in this below example the methos having filters having data in database so there is no record created in database
+    # so this method only getting value from database
+
+    obj,created = Blog.objects.get_or_create(name="force insert Soga kathai",tagline="force insert bhai")
+    # print("????????????????????????????????????????????????obj",obj)
+    # print("????????????????????????????????????????????????-------------------create",created)
+
+    # in this below method a new record is created 
+    obj,created = Blog.objects.get_or_create(name="get or set Soga kathai",tagline="get or set force insert bhai")
+    # print("????????????????????????????????????????????????obj",obj)
+    # print("????????????????????????????????????????????????-------------------create",created)
+
+    # we can use filter and or conditions
+
+    # obj,created = Blog.objects.filter(Q(name="okok") & Q(tagline="2okok") | (Q(name="p"))).get_or_create(name="lkk Soga kathai",tagline="lkk force insert bhai")
+
+    # if multiple objects found for given filter the multiple objects return error will rise
+
+    # using default keyword
+    # default is used to set value when no match found which means the default is used to set value when new object ic created
+    # it won't be used to filter instean it will used to set values only
+    obj,created = Blog.objects.get_or_create(name="get or set Soga kathai",tagline="get or set force insert bhai",defaults={"name":"default word"})
+    # print("????????????????????????????????????????????????obj",obj)
+
+    # what happedn when we have default field alos for that we can use like below
+
+    # obj,created = Blog.objects.get_or_create(name="get or set Soga kathai",tagline="get or set force insert bhai",defaults__exact = "d",defaults={"name":"default word"})
+    # print("????????????????????????????????????????????????obj",obj)
+
+    # we can use get_or_create for related models like many to many field 
+
+    obj = Entry.objects.get(pk=33)
+    obj.authors.get_or_create(name = "Govind")
+
+    # we can use async version of it
+    # use aget_or_create()
+
+    # learn about update_or_create
+
+    # in this example the defaults is used to update the filed value if match is found 
+    # and the create default is used to if there is no match found create the record with values mentioned in it.
+    obj,created = Blog.objects.update_or_create(name="get or set Soga ksathai",defaults={"name":"updated called"},create_defaults = {"name":"create defaults"})
+    print("????????????????????????????????????????????????obj",obj)
+    print("????????????????????????????????????????????????-------------------create",created)
+
+    # Asynchronous version: aupdate_or_create()
+
+    # bulk update
+
+    # the trigger events not will be trigger example save,pre_save,post_save
+
+    # not used to update many to many field values
+
+    # all_entry = Blog.objects.bulk_create(
+    #     [
+    #         Blog(name="Kailasam"),
+    #         Blog(name="Sankar")
+    #     ]
+    # )
+
+    # ignore conflicts
+
+    # if the name is unique then it throw unique constraint error
+
+    # all_entry = Author.objects.bulk_create(
+    #     [
+    #         Author(name="Kailasam",email="test@gmail.com"),
+    #         Author(name="Sankar",email="test@gmail.com")
+    #     ],
+    #     ignore_conflicts = False
+    # )
+
+    # if i give the 'ignore_conflicts = true' it will ignore the record which is create any erorr like below
+
+    # if i trying to insert the below record the unique error rise by default but in the case the error will not rise and the record also not will be inserted
+
+    all_entry = Author.objects.bulk_create(
+        [
+            Author(name="Kailasam",email="test@gmail.com"),
+            Author(name="Sankar",email="test@gmail.com")
+        ],
+        ignore_conflicts = True
+    )
+  
+    # The batch_size parameter controls how many objects are created in a single query. 
+
+    all_entry = Author.objects.bulk_create(
+        [
+            Author(name="Kailasams",email="test3@gmail.com"),
+            Author(name="Sankars",email="test4@gmail.com")
+        ],
+        ignore_conflicts = True,batch_size=1
+    )
+  
+    # update_conflicts #explore the unique and update fields
+
+    all_entry = Author.objects.bulk_create(
+        [
+            Author(name="Kailasams",email="test3@gmail.com"),
+            Author(name="Sankars",email="test4@gmail.com")
+        ],
+        update_conflicts = True,update_fields=None,unique_fields = None
+    )
+
+
+    # learn about bulk_update
+
+    # the trigger events not will be trigger example save,pre_save,post_save
+
+    # bulk_update(objs, fields, batch_size=None)
+
+    # this is not correct way to update explore when its required
+
+    all_entry = Author.objects.bulk_update(
+        [
+            Author.objects.filter(name="Kailasams",email="test3@gmail.com"),
+            Author.objects.filter(name="Sankars",email="test4@gmail.com")
+        ],fields=["name","email"]
+    )
+
+    return render(request,"learning_orm_queries/index.html",{"all_entry":all_entry or entry_all})

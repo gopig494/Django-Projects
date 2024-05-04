@@ -12,6 +12,12 @@ urlpatterns = [
     path("delete_production/",delete_production),
     path("get_entry_api/",get_entry_api),
     path("learn_extra/",learn_extra),
+    path("lock_transaction/",lock_transaction),
+    path("and_or/",and_or),
+    path("crud/",crud),
+
+    
+
 ] 
 
 
