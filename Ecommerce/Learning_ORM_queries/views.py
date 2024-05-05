@@ -1178,4 +1178,95 @@ def more_functions(request):
 
     all_entry = [Entry.objects.earliest("-pub_date","mod_date")]
 
+    # using first
+
+    # it will fetch vslue order by primary key
+
+    all_entry = [Entry.objects.first()]
+
+    # bothare the same like above and below
+
+    all_entry = [Entry.objects.all()[0]]
+
+    # we can use order by
+
+    all_entry = [Entry.objects.order_by("rating").first()]
+
+    # the same thing we can use for last
+
+    all_entry = [Entry.objects.order_by("rating").last()]
+
+    # aggerigate function
+
+    all_entry = [Entry.objects.aggregate(name = Count("id"))]
+
+    # exists
+
+    # in this below query it will execute and give 1 or zero and also no data will be in cache
+
+    all_entry = [Entry.objects.filter(headline__contains="c").exists()]
+    
+    # exe
+
+    entry = Entry.objects.filter(headline__contains="c")
+
+    print("-------------------entry exists",entry.exists()) # here sql query executed to fetch the data
+
+    print("------------------------entry data",entry.values()) #here sql queryy executed to fetch the data
+
+    # bool
+
+    all_entry = [bool(Entry.objects.filter(headline__contains="c"))]
+
+    # contains(obj)
+
+    # instead of using like {"ss":"s"}<queryset> and in 
+
+    # if obj in queryset: we can use below it will improve the performance
+
+    # queryset.contains(obj) #efficient way to find a obj in or not
+
+    #  update(**kwargs)¶
+
+    # here it will update the filterd all records with update value like below
+
+    # only restriction on the QuerySet that is updated is that it can only update columns in the model’s main table
+
+    # Entry.objects.update(blog__name="foo")  # Won't work!
+
+    # it will return no of affected rows
+
+    # Finally, realize that update() does an update at the SQL level and, thus, does not call any save() methods on your models, nor does it emit the pre_save or post_save signals
+
+    queryset = Entry.objects.filter(body_text="Around Chennai")
+
+    if queryset.exists():
+        queryset.update(headline="Updated")
+        # we can use order by then update it
+        queryset.order_by("headline").update(headline="Updated")
+    
+    # delete()
+
+    # instantly it will be deleted
+
+    # queryset = Entry.objects.filter(id=34).delete()
+
+    # The delete() method does a bulk delete and does not call any delete() methods on your models. It does, however, emit the pre_delete and post_delete signals for all deleted objects (including cascaded deletions).
+
+    # we can print what query will be executed when we use wuery set by using explain fundtion
+
+    # explain()¶
+
+    queryset = Entry.objects.filter(body_text="Around Chennai").explain()
+
+    # we can format the output like below
+    
+    # not supported in sqllite database
+    
+    # queryset = Entry.objects.filter(body_text="Around Chennai").explain(format="JSON")
+
+    # queryset = Entry.objects.filter(body_text="Around Chennai").explain(verbose=True, analyze=True)
+
+    print("-------------------queryset",queryset)
+
     return render(request,"learning_orm_queries/index.html",{"all_entry":all_entry or entry_all})
