@@ -1081,3 +1081,101 @@ def crud(request):
     )
 
     return render(request,"learning_orm_queries/index.html",{"all_entry":all_entry or entry_all})
+
+def more_functions(request):
+    entry_all = []
+
+    # using count
+
+    all_entry = [Author.objects.count()]
+
+    # using filter together
+
+    all_entry = [Author.objects.filter(name__contains="s").count()]
+
+    # in bulk by using the primary keys is more efficient than filter()
+
+    # in_bulk(id_list=None, *, field_name='pk')
+
+    # it will return key value dictories
+
+    all_entry = Author.objects.in_bulk([6])
+
+    # print("-----------------------in bulk",all_entry)
+
+    all_entry = Author.objects.in_bulk([6,15])
+
+    print("-----------------------in bulk",all_entry)
+
+    # by default it will filter by pk but we can change it like below
+
+    all_entry = Author.objects.in_bulk(["Gopi"],field_name="name")
+
+    print("-----------------------in bulk",all_entry)
+
+    # we can use distinct together
+    # sqlite not support this
+
+    # all_entry = Author.objects.distinct("name").in_bulk(field_name="name")
+
+    # if we give in_bulk only , it will fetch all the records
+
+    all_entry = Author.objects.in_bulk()
+
+    # iterator(chunk_size=None)
+
+    # if we have a queryset which evaluated once like print(queryset) it wont do sql again when we trying to evaluate again like print(queryset)
+
+    # for example
+
+    all_entry = Author.objects.all()  
+
+    print("-------all authors",all_entry) #sql query will be execured
+
+    print("-------all authors",all_entry) #here is no any sql query executed intead of it the caching value will be loaded
+
+    # so if you want to fetch the value from db not from caching like above
+    # we can use the iterator
+
+    # Note that using iterator() on a QuerySet which has already been evaluated will force it to evaluate again, 
+
+    all_entry = Author.objects.all()  
+
+    # 10 rows will be queried
+    print("-------all authors",all_entry.iterator(chunk_size=10)) #sql query will be execured
+
+    # 15 rows will be queried
+    print("-------all authors",all_entry.iterator(chunk_size=15)) #sql query will be execured
+
+    # we can alos use related models
+
+    all_entry = Entry.objects.all().select_related()
+
+    # 15 rows will be queried
+    print("-------all authors",all_entry.iterator(chunk_size=15)) #sql query will be execured
+
+    # providing no value for chunk_size will result in Django using an implicit default of 2000.
+
+    # using latest
+
+    # it will give the latest data record
+
+    all_entry = [Entry.objects.latest("pub_date")]
+
+     # it will give the oldest data record
+
+    all_entry = [Entry.objects.latest("-pub_date")]
+
+    # if we two datas are same we can add one more field to compare like below
+
+    # first it will look into oubdata if the pub date same meas it compare the mod data like same way
+
+    # if there is no values fount doesnot found error will rise
+
+    all_entry = [Entry.objects.latest("-pub_date","mod_date")]
+
+    # earliest(*fields) 
+
+    all_entry = [Entry.objects.earliest("-pub_date","mod_date")]
+
+    return render(request,"learning_orm_queries/index.html",{"all_entry":all_entry or entry_all})

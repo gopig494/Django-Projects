@@ -15,6 +15,7 @@ urlpatterns = [
     path("lock_transaction/",lock_transaction),
     path("and_or/",and_or),
     path("crud/",crud),
+    path("more_functions/",more_functions),
 
     
 
