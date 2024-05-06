@@ -15,8 +15,8 @@
 
     {% for e in all_entry %}
         <h4>{{e | safe}}</h4>
-        <h4>{{e.pub_date}}</h4>
-        <h4>{{e.pk}}</h4>
+        {% comment %} <h4>{{e.pub_date}}</h4>
+        <h4>{{e.pk}}</h4> {% endcomment %}
     {% endfor %}
 {% endif %}
 

@@ -16,6 +16,9 @@ urlpatterns = [
     path("and_or/",and_or),
     path("crud/",crud),
     path("more_functions/",more_functions),
+    path("diff_filters/",diff_filters),
+
+    
 
     
 

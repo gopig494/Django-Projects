@@ -1270,3 +1270,144 @@ def more_functions(request):
     print("-------------------queryset",queryset)
 
     return render(request,"learning_orm_queries/index.html",{"all_entry":all_entry or entry_all})
+
+def diff_filters(request):
+    entry_all = []
+
+    """exact"""
+
+    # exact #it is case sensitive
+
+    # which like == if python , we dont't need to use it simple use = for that
+
+    # it will only match Updated only
+
+    all_entry = Entry.objects.filter(headline__exact="Updated") .values()
+
+    # iexact case intesive #it will filter the text are in both upper and lower
+
+    # it will match like JOHN.John,john
+
+    all_entry = Entry.objects.filter(headline__iexact="Updated") .values()
+
+    """contains and icontains"""
+
+    # it is like %kkk% operation in sql
+    
+    all_entry = Entry.objects.filter(headline__contains="Updated") .values()
+
+    all_entry = Entry.objects.filter(headline__icontains="Updated") .values()
+
+    """ in,in """
+
+    # both are the same
+
+    # there is no 'iin' method
+
+    all_entry = Entry.objects.filter(headline__in=[1,2,3]) .values()
+
+    all_entry = Entry.objects.filter(headline__in="123") .values()
+
+    # we can use dynamic query like
+
+    all_entry = Entry.objects.filter(blog__in=Blog.objects.all()) .values()
+
+    # the correct way to optimize is
+
+    all_entry = Entry.objects.filter(blog__in=Blog.objects.all().values("id")) .values()
+
+    """ gt,gte,lt,lte """
+
+    all_entry = Entry.objects.filter(rating__lt=3) .values()
+
+    all_entry = Entry.objects.filter(rating__lte=3) .values()
+
+    all_entry = Entry.objects.filter(rating__gt=3) .values()
+
+    all_entry = Entry.objects.filter(rating__gte=Blog.objects.all().values("id")).values()
+
+    """ startswith,endswith """
+
+    all_entry = Entry.objects.filter(headline__startswith = "u").values()
+
+    all_entry = Entry.objects.filter(headline__endswith = "d").values()
+
+    """ istartswith,iendswith """
+
+    all_entry = Entry.objects.filter(headline__istartswith = "u").values()
+
+    all_entry = Entry.objects.filter(headline__iendswith = "d").values()
+
+    """ range """
+
+    all_entry = Entry.objects.filter(rating__range = (1,10)).values()
+
+    """ date,year,iso_year,month,day,week,week_day,iso_week_day,quarter,time,hour,minute,second """
+
+    # this is only used in datatimefield
+
+    all_entry = Entry.objects.filter(modified__date = "2024-04-30").values()
+
+    # both datetime and date field
+
+    all_entry = Entry.objects.filter(modified__year = "2024").values()
+
+    all_entry = Entry.objects.filter(pub_date__year = "2024").values()
+
+    all_entry = Entry.objects.filter(pub_date__year__gte = "2024").values()
+
+    # iso_year
+
+    all_entry = Entry.objects.filter(modified__iso_year = "2024").values()
+
+    # month
+
+    all_entry = Entry.objects.filter(modified__month__lte = "05").values()
+
+    # day like june 3 @almost like data filter
+
+    all_entry = Entry.objects.filter(modified__day = 30).values()
+
+    # week
+
+    all_entry = Entry.objects.filter(modified__week__gte = 15).values()
+
+    # weekday
+
+    # iso_week_day
+
+    # Note this will match any record with a pub_date that falls on a Monday (day 1 of the week), 
+    # regardless of the month or year in which it occurs. Week days are indexed with day 1 being Monday 
+    # and day 7 being Sunday
+
+    all_entry = Entry.objects.filter(modified__week_day = 3).values()
+
+    # quarter
+
+    all_entry = Entry.objects.filter(modified__quarter =2).values()
+
+    # time
+
+    all_entry = Entry.objects.filter(modified__time = datetime.time(1, 49,35)).values()
+
+    # hour
+
+    all_entry = Entry.objects.filter(modified__hour = 1).values()
+
+    # minute
+
+    all_entry = Entry.objects.filter(modified__minute = 49).values()
+
+    # second
+
+    all_entry = Entry.objects.filter(modified__second = 35).values()
+
+    """ isnull """
+
+    all_entry = Entry.objects.filter(modified__isnull = True).values()
+
+    """ regext  """
+
+    all_entry = Entry.objects.filter(modified__regex = "1").values()
+
+    return render(request,"learning_orm_queries/index.html",{"all_entry":all_entry or entry_all})
