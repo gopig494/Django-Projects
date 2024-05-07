@@ -705,8 +705,27 @@ def customized_lookup_values():
     # Restaurant.objects.prefetch_related(
     # Prefetch("pizzas__toppings", queryset=Toppings.objects.using("replica")),).using("cold-storage")'
     
+    # when we call the prefetch related internally the method prefetch_related_objects is called to fetch related objects
 
-    return all_entry
+    # FilteredRelation
+
+    # from django.db.models import FilteredRelation, Q
+    # Restaurant.objects.annotate(   
+    #      pizzas_vegetarian=FilteredRelation(
+    #          "pizzas",
+    #          condition=Q(pizzas__vegetarian=True),
+    #      ),
+    #  ).filter(pizzas_vegetarian__name__icontains="mozzarella")
+
+    # # If there are a large number of pizzas, this queryset performs better than:
+
+    # Restaurant.objects.filter(
+    #     pizzas__vegetarian=True,
+    #         pizzas__name__icontains="mozzarella",
+    #  )
+
+ 
+    return all_entry  
 
 
 # how to use custom sql with django orm which means combination of sql and django ORM
@@ -1409,5 +1428,13 @@ def diff_filters(request):
     """ regext  """
 
     all_entry = Entry.objects.filter(modified__regex = "1").values()
+
+    " Aggerigate functions "
+
+    # using output field
+
+    """ Sum,Count,Avg,Min,Max,StdDev,Variance """
+
+    all_entry = Entry.objects.aggregate(e_count=Sum("rating",output_field = CharField()))
 
     return render(request,"learning_orm_queries/index.html",{"all_entry":all_entry or entry_all})
