@@ -13,3 +13,9 @@ admin.site.register(Blog,BlogModelAdmin)
 admin.site.register(Author)
 admin.site.register(Entry,EntryModelAdmin)
 admin.site.register(Production)
+admin.site.register(Location)
+admin.site.register(Car)
+
+
+
+

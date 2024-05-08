@@ -44,3 +44,40 @@ class Production(models.Model):
     values = models.JSONField(null=True)
     entry = models.ForeignKey(Entry, on_delete=models.CASCADE,related_name="entry_forign")
     entries = models.ManyToManyField(Entry)
+
+# Review models
+
+class Location(models.Model):
+    city = models.CharField(verbose_name="Current City",max_length=20)
+
+    # forign key is many to one field
+
+    blog = models.ForeignKey(Blog,verbose_name="Blog",on_delete=models.CASCADE)
+
+    # we can create self relationship
+
+    # first way
+
+    parent_location = models.ForeignKey("self",on_delete=models.CASCADE,blank=True,null=True,default=None)
+
+    def __str__(self):
+        return self.city
+
+# use absraction 
+
+# we can use the model anyware in the project with the fieldnames
+
+# now the example use the same file to explore
+
+class AbstractCar(models.Model):
+    car_model = models.CharField(max_length=100)
+
+    class Meta:
+        abstract = True
+
+# here the car model having both car_model field and colour field
+
+# just reusability takes place 
+
+class Car(AbstractCar):
+    colour = models.CharField(max_length=40)
