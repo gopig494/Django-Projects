@@ -326,24 +326,29 @@ def validate_test(value):
 class Person_1(models.Model):
     name = models.CharField(max_length=100)
 
-class Group_1(models.Model):
-    name = models.CharField(max_length=100)
-    members = models.ManyToManyField(Person_1, through='Membership_1')
-
-class Membership_1(models.Model):
-    person = models.ForeignKey(Person_1, on_delete=models.CASCADE)
-    group = models.ForeignKey(Group_1, on_delete=models.CASCADE)
-    date_joined = models.DateField()
-    invite_reason = models.CharField(max_length=100)
-
-
-
 class Parent(models.Model):
     parent_field_me = models.CharField(max_length=100)
+
 
 class Child(Parent):
     child_field = models.CharField(max_length=100)
     parent_link = models.OneToOneField(Parent, on_delete=models.CASCADE, parent_link=True,related_name="child_1",related_query_name="child_1_query")
+
+
+# while creating many to many field djngo will create the new table to store many to many fileld values
+
+# we can override this by using 'throgh' argument.
+
+class Group_1(models.Model):
+    name = models.CharField(max_length=100)
+    members = models.ManyToManyField(Person_1, through='Membership_1',through_fields=("group", "person"))
+    parent = models.ManyToManyField(Parent)
+
+class Membership_1(models.Model):
+    group = models.ForeignKey(Group_1, on_delete=models.CASCADE)
+    person = models.ForeignKey(Person_1, on_delete=models.CASCADE)
+    date_joined = models.DateField()
+    invite_reason = models.CharField(max_length=100)
 
 class Parent_2(models.Model):
     parent_field = models.CharField(max_length=100)

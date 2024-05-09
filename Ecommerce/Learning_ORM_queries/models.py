@@ -81,3 +81,25 @@ class AbstractCar(models.Model):
 
 class Car(AbstractCar):
     colour = models.CharField(max_length=40)
+
+# we can import and use another app models here like forignkey and many to many field
+
+# This sort of reference, called a lazy relationship, can be useful when resolving circular import dependencies between two applications.
+
+from product_management.models import Category
+
+class Product(models.Model):
+    category = models.ForeignKey(Category, verbose_name="Category Name", on_delete=models.CASCADE)
+
+    # in this case when we tring to delete the category attached to this model
+
+    # the model record also will be deleted depending upon casecade nature
+
+    # so the pre_delete and post_delete signales will be triggered and delete not triggered
+
+    # if we set like below we can't use backward relationship fron category model 
+
+    # like category__category 
+
+    category = models.ForeignKey(Category, verbose_name="Category Name", on_delete=models.CASCADE,related_name="+")
+    

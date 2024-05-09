@@ -15,6 +15,9 @@ admin.site.register(Entry,EntryModelAdmin)
 admin.site.register(Production)
 admin.site.register(Location)
 admin.site.register(Car)
+admin.site.register(Product)
+
+
 
 
 
