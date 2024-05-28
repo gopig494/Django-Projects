@@ -38,6 +38,10 @@ class Entry(models.Model):
 
     def __str__(self):
         return self.headline
+    
+    class Meta:
+        ordering = ["headline"]
+        verbose_name = "Entry Verbosue"
   
 class Production(models.Model):
     name = models.CharField(max_length=100)
@@ -63,24 +67,6 @@ class Location(models.Model):
     def __str__(self):
         return self.city
 
-# use absraction 
-
-# we can use the model anyware in the project with the fieldnames
-
-# now the example use the same file to explore
-
-class AbstractCar(models.Model):
-    car_model = models.CharField(max_length=100)
-
-    class Meta:
-        abstract = True
-
-# here the car model having both car_model field and colour field
-
-# just reusability takes place 
-
-class Car(AbstractCar):
-    colour = models.CharField(max_length=40)
 
 # we can import and use another app models here like forignkey and many to many field
 
@@ -102,4 +88,116 @@ class Product(models.Model):
     # like category__category 
 
     category = models.ForeignKey(Category, verbose_name="Category Name", on_delete=models.CASCADE,related_name="+")
+    Level_Choices = models.TextChoices("Level_Choices","1 2 3 4")
+    level = models.CharField(max_length=100,choices=Level_Choices)
+
+# learn about meta in models
+
+# use absraction 
+
+# we can use the model anyware in the project with the fieldnames
+
+# now the example use the same file to explore
+
+class AbstractCar(models.Model):
+    car_model = models.CharField(max_length=100)
+
+    class Meta:
+        abstract = True
+
+# here the car model having both car_model field and colour field
+
+# just reusability takes place 
+
+class Car(AbstractCar):
+    colour = models.CharField(max_length=40)
+
+class CustomManager(models.Manager):
+    def get_data(self):
+        print("-------self.all",self.all())
+        return self.all()
+
+    # def create(self,**kwargs):
+    #     raise IndexError
+
+    # If you want to modify the initial QuerySet returned by the manager, you can override the get_queryset method:
+    # def get_queryset(self) -> models.QuerySet:
+    #     return super().get_queryset().filter(name__contains="g")
     
+class LearnQSet(models.QuerySet):
+    def get_all(self):
+        return self.filter(name__contains="g")
+
+class LearnMeta(models.Model):
+    name = models.CharField(max_length = 30)
+    age = models.IntegerField()
+    info = models.CharField(max_length=30,blank=True)
+    product = models.ManyToManyField(Product)
+
+
+
+    # override the objects manager
+
+    # we can create multiple manager and make attribute like below then start to use them
+
+    # objects = CustomManager()
+
+    # custom manager class
+
+    # if we defind any custom managers the default manager `object` manager will the deleted or none 
+    custom_manager = CustomManager()
+
+    # if you want to use object manager as well as custom managers , we must specifi the objects manager also
+    objects = CustomManager()
+
+    # different method to create manager
+
+    qset_manager = LearnQSet.as_manager()
+
+
+    class Meta:
+        # the table will be created under customer app like customer_learnmeta
+        # app_label = "customer"
+        # by default the `object` manager is used we can change the name by using below attr
+        base_manager_name = "custom_manager"
+
+        # we can change the table name 
+        # in general the table name in database will be appname_classname
+        # to override this below ins
+        # internally the database name will be chnaged but when using ORM you have to use the model class name.
+        db_table = "meta_learning"
+
+        # documentation or instruction about our models we can use db_table command
+
+        db_table_comment = "User to learn meta in django"
+
+        # table space we can use different database to store and create the data for indexing purpose
+
+        # options = {'tablespace': 'my_tablespace'}
+
+        # from django.db import connection
+
+        # with connection.cursor() as cursor:
+        #     cursor.execute("CREATE TABLE my_table (...) TABLESPACE my_tablespace")
+
+        # default manager
+
+        # by default the objects manger is used to fetch the data and we can create alternative managers like above
+
+        # if no manager specified the default manager will be used like below
+
+        # Override default_manager_name to use custom_manager as the default manager
+
+        default_manager_name = "custom_manager"
+
+        # default related name
+        # by default djnago takes the related model name and _set to fethc the data
+        # if many to many field having table name in master table
+        # we can use master_table_set from the table name which means many to many field name
+
+        default_related_name = "get_meta"
+
+        # decending order 
+        # which used in latest and earlist function call tp return a sigle record 
+        # see the view2.py for more info
+        get_latest_by = "-age"

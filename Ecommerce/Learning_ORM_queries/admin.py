@@ -16,7 +16,8 @@ admin.site.register(Production)
 admin.site.register(Location)
 admin.site.register(Car)
 admin.site.register(Product)
-
+# admin.site.register(AbstractCar)
+admin.site.register(LearnMeta)
 
 
 

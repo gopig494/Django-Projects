@@ -1,5 +1,6 @@
 from django.urls import path,include
 from Learning_ORM_queries.views import *
+from Learning_ORM_queries.views_2 import *
 
 urlpatterns = [
     path("creating_blog/",creating_blog),
@@ -17,10 +18,9 @@ urlpatterns = [
     path("crud/",crud),
     path("more_functions/",more_functions),
     path("diff_filters/",diff_filters),
+    path("revise/",revise),
+    path("learn_meta/",learn_meta),
 
-    
-
-    
 
 ] 
 

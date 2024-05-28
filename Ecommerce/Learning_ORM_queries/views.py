@@ -115,7 +115,7 @@ def creating_entry(request):
     entry.save()
     entry.authors.set(old_authors)
     
-    # how to add and set and clear one to one fields and may tot many tot many fields
+    # how to add and set and clear one to one fields and may to many to many fields
     entry = Entry.objects.get(pk = 1)
     entry.blog = Blog.objects.get(pk=73)
     # add will add extra values like append
@@ -1437,4 +1437,15 @@ def diff_filters(request):
 
     all_entry = Entry.objects.aggregate(e_count=Sum("rating",output_field = CharField()))
 
+    return render(request,"learning_orm_queries/index.html",{"all_entry":all_entry or entry_all})
+
+def revise(request):
+    # create many to many field table record by parent table orm
+    entry_all = []
+    all_entry = Entry.objects.get(id=33)
+    all_entry.authors.create(name='Indian3',through_defaults={"email": "123r@gmail.com"})
+    # it will unselected the specified value from the master table.
+    all_entry.authors.remove(54)
+    all_entry.save()
+    all_entry = [all_entry]
     return render(request,"learning_orm_queries/index.html",{"all_entry":all_entry or entry_all})
