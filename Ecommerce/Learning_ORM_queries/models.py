@@ -1,5 +1,6 @@
 from django.db import models
 from datetime import date
+from django.db.models import F,Q
 
 # Create your models here.
 
@@ -91,6 +92,12 @@ class Product(models.Model):
     Level_Choices = models.TextChoices("Level_Choices","1 2 3 4")
     level = models.CharField(max_length=100,choices=Level_Choices)
 
+    class Meta:
+        ordering = ["-level"]
+
+    def __str__(self):
+        return self.level
+
 # learn about meta in models
 
 # use absraction 
@@ -133,6 +140,7 @@ class LearnMeta(models.Model):
     age = models.IntegerField()
     info = models.CharField(max_length=30,blank=True)
     product = models.ManyToManyField(Product)
+    product_forign = models.ForeignKey(Product,on_delete=models.CASCADE,related_name = "porducts")
 
 
 
@@ -154,6 +162,10 @@ class LearnMeta(models.Model):
 
     qset_manager = LearnQSet.as_manager()
 
+
+    def __str__(self):
+        # return f'{self.name}  -  {self.age}'
+        return self.name
 
     class Meta:
         # the table will be created under customer app like customer_learnmeta
@@ -200,4 +212,212 @@ class LearnMeta(models.Model):
         # decending order 
         # which used in latest and earlist function call tp return a sigle record 
         # see the view2.py for more info
+
         get_latest_by = "-age"
+
+        # order by the forign key values by their field names
+
+        # ordering and order_with_resect_to can't be used at same time if we use the order_with_respect_to it throw error
+
+        # you can see the product is forign key then the product table the ordering isby ht efield 'level'
+
+        # so when we use LearnMeta.objects.all() the ordering is overided by the forign key field
+
+        # so the ordering is depending on the forign key field only or ordering overided
+
+        # explicily we can get the order by calling the function from related model
+
+        # it willnot reflected in admin portal it only used when using the objects to fetch the data
+
+        # meta = Product.objects.all()
+        # mets.get_learnmeta_order()
+
+        # we can also set the order then fetch the data
+
+        # meta = Product.objects.all()
+        # mets.set_learnmeta_order(['learnmeta primary keys'])
+
+
+        # to get next and previous values in order we can use
+        # meta = Product.objects.all()
+        # meta.get_next_in_order()
+        # meta.get_previous_in_order()
+
+        # order_with_respect_to = "product_forign"
+
+        # ordering
+
+        # depecing upon the list the fethcing order will be decided
+
+        # it will order the records in admin portal also
+
+        # ascening order 
+
+        # ordering = ["age"]
+
+        # decending order
+
+        # ordering = ["-age"]
+
+        # randomly
+
+        # ordering = ["?"]
+
+        # we can throw the null values to last by below wxpression
+        
+        ordering = [F("name").asc(nulls_last = True)]
+
+
+        # permissions 
+
+        # below code is the syntax , these are the customized permissions names
+
+        # permissions = [
+        #     ("can_view_mymodel", "Can view MyModel"),
+        #     ("can_change_mymodel", "Can change MyModel"),
+        #     ("can_delete_mymodel", "Can delete MyModel"),
+        # ]
+
+        # default permissions
+
+        default_permissions = ["add","change","delete","view"]
+
+# if you want to create a model that only reference of already existing table schema
+# in this table django won't do any table modification when make migrations like alter table, create table
+# the managed keyword is used to matching model with existing tables schema which means the table is already created
+# we are going to only use the table not modifying anyting on it.
+
+# in this table the name,id just like a form only in admin , if i hide the attribute and make migrations there is noting happen
+
+# because it just referering existing schema only
+
+# if we using many to many field like relation fields it eill vary refer in django documentation
+
+class LearnManaged(models.Model):
+    name = models.TextField()
+    id = models.IntegerField(primary_key=True)
+    class Meta:
+        managed = False
+        db_table = "testing_managed"
+
+        # ---
+        # select_on_save is a model meta option in Django that determines if Django will use the pre-1.6 
+        # django.db.models.Model.save() algorithm. The old algorithm uses SELECT to determine if there 
+        # is an existing row with the same primary key, and if so, it updates that row instead of inserting a new one.
+        select_on_save = True
+        # However, it's worth noting that select_on_save is not a recommended approach, as it can lead to 
+        # performance issues and is not compatible with all databases. The default behavior of Django's save()
+        #  method is to use an INSERT statement, and if a row with the same primary key already exists, 
+        # it will raise an IntegrityError.
+
+        # If you need to update an existing row instead of inserting a new one, it's recommended to use the 
+        # update_or_create() method or the get_or_create() method, which are more efficient and reliable.
+        # ---
+
+
+# In this example, ProxyModel is a proxy model(MyPerson) based on Person. It doesn't create its own database table; instead, 
+# it operates on the same table as LearnManaged. 
+# You can add custom methods, override existing ones, or customize behavior without affecting the original model.
+# you can't add custom fields in it
+# we can override the methods like create,save,delete
+
+class Person(models.Model):
+    first_name = models.CharField(max_length=30)
+    last_name = models.CharField(max_length=30)
+
+    class Meta:
+        # we can mention indexing in meta
+        indexes = [
+            models.Index(fields=["first_name"]), #index will be created and column name will be auto generated 
+            # models.Index(fields=["first_name","last_name"]), #indexing will be created for both fields
+            # models.Index(fields=["first_name"],name="first_name_indexing"), #the column name will the name args value
+            # models.Index(fields=["first_name","last_name"],name="first_name_last_name_indexing"), #indexing will be created for both fields
+        ]
+
+        # in databaee the first name and last_name should be unique
+
+        # it won't work for manytomany fields
+        # we can  use list of list
+        # unique_together = ["first_name","last_name"]
+
+        # containts--
+        # if the condition satified it will rise an error
+        constraints = [
+            # models.UniqueConstraint(fields=["first_name"],name="unique_first_name_constraint"),
+            # in this below example the first_name not starts with g it will rise an error
+            # the name must be starts with g
+            models.CheckConstraint(check=models.Q(first_name__startswith="g"), name="check_first_name_constraint")
+        ]
+
+        # verbose name is human readable label
+
+        # see the table name in list vide and side to understand the difference
+        
+        verbose_name = "Person Rename"
+
+        verbose_name_plural = "Persons Named"
+
+
+class MyPerson(Person):
+    class Meta:
+        proxy = True
+
+    def create(self):
+        pass
+
+# In Django, the required_db_features setting is used to specify a set of database features that must be supported by 
+# the database in use. If any of the specified features are not supported, Django will raise an ImproperlyConfigured 
+# exception.
+
+# For example, suppose you have a Django project where you need certain database features to be supported by the backend 
+# database. You can set required_db_features in your Django settings file (usually settings.py) like this:
+
+# python required_db_features
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'mydatabase',
+#         'USER': 'mydatabaseuser',
+#         'PASSWORD': 'mypassword',
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+#         'OPTIONS': {
+#             'required_db_features': ['supports_transactions', 'supports_select_for_update'],
+#         },
+#     }
+# }
+
+# In this example, the database must support transactions and select_for_update queries. 
+# If any of these features are not supported by the database, Django will raise an exception during startup.
+
+# This setting is particularly useful when you're developing an application that relies on certain database features 
+# and you want to ensure compatibility across different database backends.
+
+# The required_db_vendor option is not a standard configuration in Django as of my last update. However, 
+# hypothetically, if it were to be implemented, it could be used to enforce the use of a specific database vendor 
+# for your Django project. Here's how you might use it in a hypothetical scenario:
+
+# python required_db_vendor
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',  # Required MySQL database vendor
+#         'NAME': 'mydatabase',
+#         'USER': 'mydatabaseuser',
+#         'PASSWORD': 'mypassword',
+#         'HOST': 'localhost',
+#         'PORT': '3306',
+#         'OPTIONS': {
+#             'required_db_vendor': 'mysql',
+#         },
+#     }
+# }
+
+# In this example, the 'required_db_vendor' option is set to 'mysql', indicating that MySQL is the required database 
+# vendor for the project. If another database backend is configured, Django could raise an exception during startup, 
+# indicating a misconfiguration.
+
+# However, it's important to note that as of my last update, Django doesn't have built-in support for such a feature. 
+# Database vendor selection is typically done via the 'ENGINE' setting in the DATABASES configuration, and Django 
+# aims to provide a database-agnostic ORM to work with different database backends.

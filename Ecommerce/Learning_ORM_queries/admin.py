@@ -18,6 +18,10 @@ admin.site.register(Car)
 admin.site.register(Product)
 # admin.site.register(AbstractCar)
 admin.site.register(LearnMeta)
+admin.site.register(LearnManaged)
+admin.site.register(Person)
+
+
 
 
 
