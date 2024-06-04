@@ -1,6 +1,9 @@
+from typing import Collection
 from django.db import models
 from datetime import date
 from django.db.models import F,Q
+from django.db.models import DEFERRED
+from django.core.exceptions import ValidationError,NON_FIELD_ERRORS
 
 # Create your models here.
 
@@ -421,3 +424,164 @@ class MyPerson(Person):
 # However, it's important to note that as of my last update, Django doesn't have built-in support for such a feature. 
 # Database vendor selection is typically done via the 'ENGINE' setting in the DATABASES configuration, and Django 
 # aims to provide a database-agnostic ORM to work with different database backends.
+# ---end
+
+class LearnModel(models.Model):
+    first_name = models.CharField(max_length=200)
+    last_name = models.CharField(max_length=200)
+
+    # property is noting but a virutla column the value will be manipulated when we call the function
+    # example
+    # l = LeanModel.objects.get(id=2)
+    # l.full_name #here the full name will be returned
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"
+    
+    # overriding the class methods or create custom class methods
+    @classmethod
+    def create(cls,**fields):
+        lmodel = cls(first_name = fields.get("first_name"),last_name = fields.get("last_name"))
+        return lmodel
+    
+
+    # The from_db method is used to create a new instance of the model from a database row. 
+    # The default implementation of from_db is provided by Django, but this code overrides it 
+    # with a custom implementation.
+
+    # The from_db() method can be used to customize model instance creation when loading from the database.
+
+    @classmethod
+    def from_db(cls, db, field_names, values):
+        # Default implementation of from_db() (subject to change and could # be replaced with super()).
+        # concrete_fields fields are fields of database
+
+        # basiaclly it eill used to form the models instance by using the override we can customize the field values initialization or assinging.
+     
+        # it will work both admin actions and orm actions
+
+        if len(values) != len(cls._meta.concrete_fields):
+            values = list(values)
+            values.reverse()
+            values = [
+
+                values.pop() if f.attname in field_names else DEFERRED
+
+                for f in cls._meta.concrete_fields
+
+            ]
+
+        instance = cls(*values)
+
+        instance._state.adding = False
+
+        instance._state.db = db
+
+        # customization to store the original field values on the instance
+
+        instance._loaded_values = dict(
+
+            zip(field_names, (value for value in values if value is not DEFERRED))
+
+        )
+
+        print("----------instance",instance.first_name)
+
+        return instance
+    
+    def refresh_from_db(self, using=None, fields=None, **kwargs):
+        if fields is not None:
+            fields = set(fields)
+            deferred_fields = self.get_deferred_fields()
+            # If any deferred field is going to be loaded
+            if fields.intersection(deferred_fields):
+                # then load all of them
+                fields = fields.union(deferred_fields)
+        print("--refresh from db",fields)
+        # super().refresh_from_db(using, fields, **kwargs)
+        super().refresh_from_db(using, list(fields))
+
+class LearnValidate(models.Model):
+    def get_choices():
+        return {
+            "L":"Large"
+        }
+    name = models.CharField(max_length=100)
+    age = models.IntegerField()
+    uni_field = models.IntegerField(unique=True)
+    learn_m = models.ForeignKey(LearnModel,on_delete=models.CASCADE)
+    size = models.CharField(max_length=100,choices=get_choices)
+    creation = models.DateTimeField(auto_now_add=True)
+    
+
+    # it will call only the model is used as model form and is_valid is callled in the form submission
+    # it will also call in the admin portal form submission.
+
+    # when we use model_instance.save() it will trigger the clean related methods
+
+    # then when we use model form and use is_valid it will trigger clean related mehtods
+
+    # When we save from adminpanel it will trigger clean realted methods.
+
+    # def clean_fields(self, exclude: Collection[str] | None = ...) -> None:
+    #     print("---clearn fields","---clearn fields")
+    #     if self.age > 5:
+    #         # raise ValidationError("Age can't be more than 5.")
+    #         raise ValidationError(
+    #                                         {
+    #                                             "name": ValidationError(("Missing name."), code="required"),
+    #                                             "age": ValidationError(("Invalid age."), code="invalid"),
+    #                                         }
+    #                                     )
+    #     return super().clean_fields(exclude) 
+    
+    # def clean(self) -> None:
+    #     print("--clean","--clean")
+    #     if self.age  == 5:
+    #         raise ValidationError("Age can't be 5.")
+    #     if self.age == 4:
+    #         raise ValidationError({"age":"kk"})
+    #     return super().clean()
+    
+    # by default the unique error in rise by django if unique set true , we can override and give some vustom messages
+    # we can define in django forms to override the behavior also
+    # def validate_unique(self, exclude: Collection[str] | None = ...) -> None:
+    #     if self.uni_field == 1 :
+    #         raise ValidationError('unique error')
+    
+    # it will check any constraints like unique,check,exclusion constraints
+    # not check fieldtype,mandatory.
+    
+    # def validate_constraints(self,exclude):
+    #     pass
+
+    #This method calls Model.clean_fields(), Model.clean(), Model.validate_unique() (if validate_unique is True), and Model.validate_constraints() (if validate_constraints is True) in that order and raises a ValidationError that has a message_dict attribute containing errors from all four stages.
+
+    # The optional exclude argument can be used to provide a set of field names that can be excluded from validation and cleaning. ModelForm uses this argument to exclude fields that aren’t present on your form from being validated since any errors raised could not be corrected by the user.
+
+    # Note that full_clean() will not be called automatically when you call your model’s save() method. You’ll need to call it manually when you want to run one-step model validation for your own manually created models.
+    
+    # def full_clean(self, exclude: Collection[str] | None = ..., validate_unique: bool = ..., validate_constraints: bool = ...) -> None:
+        # print("---full clean-----------------")
+        # it will call like below
+        # clean_fields()
+        # clean()
+        # 
+        # try:
+        # exclude = ["age"]
+        # return super().full_clean(exclude, validate_unique, validate_constraints)
+        # except Exception as e:
+            # to get the exact error message we can use like below
+            # non_field_errors = e.message_dict[NON_FIELD_ERRORS]
+            # print("--non_field_errors---",non_field_errors)
+            # print("--non_field_errors---",'s')
+
+
+    # get absolute url which is used in the template 
+    # yes we can give the url in template without using the get_absolute_url but that is not a good practice.
+
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse("model_detail", kwargs={"pk": self.pk})
+    
+  

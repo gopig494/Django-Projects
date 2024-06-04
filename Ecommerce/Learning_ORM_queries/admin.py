@@ -9,6 +9,8 @@ class BlogModelAdmin(admin.ModelAdmin):
 class EntryModelAdmin(admin.ModelAdmin):
     list_display = ["blog","headline"]
 
+        
+
 admin.site.register(Blog,BlogModelAdmin)
 admin.site.register(Author)
 admin.site.register(Entry,EntryModelAdmin)
@@ -20,6 +22,10 @@ admin.site.register(Product)
 admin.site.register(LearnMeta)
 admin.site.register(LearnManaged)
 admin.site.register(Person)
+admin.site.register(LearnModel)
+admin.site.register(LearnValidate)
+
+
 
 
 
