@@ -2,6 +2,7 @@ from django.http.response import HttpResponse
 from django.shortcuts import render
 from .models import *
 from .forms import *
+from django.db import connection
 
 def learn_meta(request):
     # all = LearnMeta.objects.all()
@@ -175,5 +176,95 @@ def get_human_readble_values(request):
     print("----------new---adding---",data._state.adding)
 
     print("----------new---db---",data._state.db)
+
+    data.get_values()
+
+    return HttpResponse("human readable objects")
+
+def raw_sql_learning(request):
+
+    # using objects raw
+
+    data = LearnValidate.objects.raw("SELECT * FROM Learning_ORM_queries_learnvalidate WHERE name = 'Gopi'")
+    for each_rec in data:
+        print("--each_rec---",each_rec.pk)
+    # learn about alias
+    data = LearnValidate.objects.raw("SELECT name AS l_name,age AS age_no,id FROM Learning_ORM_queries_learnvalidate WHERE name = 'Gopi'")
+    for each_rec in data:
+        print("--each_rec----alias--",each_rec.l_name)
+    # using djangos translate
+    name_map = {"name":"l_name","age":"age_no"}
+    data = LearnValidate.objects.raw("SELECT name,age,id FROM Learning_ORM_queries_learnvalidate WHERE name = 'Gopi'",translations=name_map)
+    for each_rec in data:
+        print("--django translation----alias--",each_rec.l_name)
+    # defered field is fetched only when we trying to access not by doing the raw sql or query set
+    # examples last_name is defer field so it will fetxh when we trying to access it
+    # >>> for p in Person.objects.raw("SELECT id, first_name FROM myapp_person"):
+    # ...     print(
+    # ...         p.first_name,  # This will be retrieved by the original query
+    # ...         p.last_name,  # This will be retrieved on demand
+    # ...     )
+    # ...
+    # John Smith
+    # Jane Jones
+
+    # passing params to raw sql
+
+    data = LearnValidate.objects.raw("SELECT name,age,id FROM Learning_ORM_queries_learnvalidate WHERE name = %s",['Gopi'])
+
+    data = LearnValidate.objects.raw("SELECT name,age,id FROM Learning_ORM_queries_learnvalidate WHERE name = %(name)s",{"name":'Gopi'})
+
+    for each_rec in data:
+        print("--params--dict--alias--",each_rec.name)
+
+    # using connections and cursor
+
+    with connection.cursor() as cursor:
+        cursor.execute(" SELECT * FROM Learning_ORM_queries_learnvalidate")
+        
+        # when using dynamic params do not include '' quotes in query like '%s' use only %s
+        
+        cursor.execute(" SELECT * FROM Learning_ORM_queries_learnvalidate where name=%s",['Gopi'])
+
+        # row = cursor.fetchone()
+        all_row = cursor.fetchall()
+        # many_row = cursor.fetchmany()
+        # print("---fetch one---",row)
+        print("---fetch all--",all_row)
+        # print("---fetch many_row--",many_row)
+
+        def map_dict(cursor):
+            columns = [col[0] for col in cursor.description]
+            # print("----columns-----",columns)
+            return [dict(zip(columns,row)) for row in all_row]
+
+        key_val = map_dict(cursor)
+
+        print("---key---val---",key_val)
+    
+    # when using multiple database we can use the database alias name to coonect like below
+
+    # with connection["db alias name"].cursor() as cursor:
+
+    # this is how multiple databse configured in settings.py
+
+    # and the 'default' and 'users' is the database names
+
+#     DATABASES = {
+#     "default": {
+#         "NAME": "app_data",
+#         "ENGINE": "django.db.backends.postgresql",
+#         "USER": "postgres_user",
+#         "PASSWORD": "s3krit",
+#     },
+#     "users": {
+#         "NAME": "user_data",
+#         "ENGINE": "django.db.backends.mysql",
+#         "USER": "mysql_user",
+#         "PASSWORD": "priv4te",
+#     },
+# }
+
+    
 
     return HttpResponse("human readable objects")

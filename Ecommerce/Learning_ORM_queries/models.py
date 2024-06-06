@@ -580,8 +580,16 @@ class LearnValidate(models.Model):
     # get absolute url which is used in the template 
     # yes we can give the url in template without using the get_absolute_url but that is not a good practice.
 
+    # this not only used in template which is also used in admin detail view 
+
+    # by opening the admin details page you can see the view on site near history button at right side corner
+
     def get_absolute_url(self):
         from django.urls import reverse
         return reverse("model_detail", kwargs={"pk": self.pk})
     
-  
+    # custom methods
+
+    def get_values(self):
+        print("---self.name--",self.name)
+        return self.name
