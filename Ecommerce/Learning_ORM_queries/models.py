@@ -593,3 +593,43 @@ class LearnValidate(models.Model):
     def get_values(self):
         print("---self.name--",self.name)
         return self.name
+    
+# learning about
+# abstraction classes
+# multi-table inheritance
+# proxy models
+
+# abstraction class
+
+# single abstract
+
+class CommonClass(models.Model):
+    state_name = models.CharField(max_length=100)
+    country_name = models.CharField(max_length=100)
+
+    class Meta:
+        abstract = True
+        # not that the ordering is case sensitive so the uppercase ordering 
+        # will first done then only lower case ordring done
+        ordering = ["state_name"]
+        verbose_name = "Meta Working"
+
+    def __str__(self):
+        return self.state_name
+
+class BankCustomer(CommonClass):
+    customer_name = models.CharField(max_length=100)
+
+    # meta inheritance
+    # by default the inheritance concept is to inherit all the methods and attr from parent class
+    # here is the meta is inherited from abstract class but the class is not abstracted 
+    # if you want to make this class also abstract use ## abstract=True here aslo
+    class Meta(CommonClass.Meta):
+        # abstract = True
+        pass
+
+    # way of using multiple meta inheritance class like below
+    # in this inheritance the ordering of inheritance in followed like normal class inheritance
+    # which means left side class meta is overidded or workover any other classes.
+    # class Meta(CommonClass.Meta,Example.Meta):
+    #     pass

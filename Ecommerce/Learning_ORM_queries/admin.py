@@ -24,6 +24,8 @@ admin.site.register(LearnManaged)
 admin.site.register(Person)
 admin.site.register(LearnModel)
 admin.site.register(LearnValidate)
+admin.site.register(BankCustomer)
+
 
 
 

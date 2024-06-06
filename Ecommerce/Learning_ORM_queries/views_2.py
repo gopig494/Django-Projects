@@ -268,3 +268,26 @@ def raw_sql_learning(request):
     
 
     return HttpResponse("human readable objects")
+
+
+def learn_sql_store_procedure(request):
+
+    # if we have store procedure in our databse already we can call by below methods
+
+    with connection.cursor() as cursor:
+        cursor.callproc("procedure name",["args"])
+
+    return HttpResponse("human readable objects")
+
+def model_inheritance(request):
+
+    cust = BankCustomer.objects.all()
+
+    for c in cust:
+        print("---c---",c.state_name)
+        print("---c---",c.country_name)
+        print("---c---",c.customer_name)
+    
+
+
+    return HttpResponse("test model inheritance")

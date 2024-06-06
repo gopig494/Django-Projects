@@ -24,7 +24,9 @@ urlpatterns = [
     path("validate_model/",validate_model),
     path("model_details/<int:pk>/",validate_model,name="model_detail"),
     path("get_human_readble_values/",get_human_readble_values),
-    path("raw_sql_learning/",raw_sql_learning)
+    path("raw_sql_learning/",raw_sql_learning),
+    path("learn_sql_store_procedure/",learn_sql_store_procedure),
+    path("model_inheritance/",model_inheritance)
 ] 
 
 
