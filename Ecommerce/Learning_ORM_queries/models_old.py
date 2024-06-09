@@ -297,6 +297,7 @@ class LearnMeta(models.Model):
 # if we using many to many field like relation fields it eill vary refer in django documentation
 
 class LearnManaged(models.Model):
+    # we have to mention the same schema here to use like below the same fieldnames and types
     name = models.TextField()
     id = models.IntegerField(primary_key=True)
     class Meta:
@@ -502,6 +503,9 @@ class LearnModel(models.Model):
         super().refresh_from_db(using, list(fields))
 
 class LearnValidate(models.Model):
+    def __str__(self):
+        return self.name
+
     def get_choices():
         return {
             "L":"Large"
@@ -607,6 +611,27 @@ class CommonClass(models.Model):
     state_name = models.CharField(max_length=100)
     country_name = models.CharField(max_length=100)
 
+    # learn_validate = models.ManyToManyField(LearnValidate)
+
+    # if we have many to many field and want to access the linked fileds we can use the 'modelclass name' and _set to access
+
+    # in the above case working well
+
+    # but when you want to give the related_name to the manytomany field , it will be a common
+
+    # so conflict occured in this case like when we trying to use like below
+
+    # learn_validate = models.ManyToManyField(LearnValidate,related_name="learn_validate")
+
+    # in the above case when we use the base abstract case to more than one table we can't reverse acces this by verbose name because it has dtatic name
+
+    # to overcome this below code is used
+
+    # see the view_2.py to know how it will be work
+
+    learn_validate = models.ManyToManyField(LearnValidate,related_name="%(app_label)s_%(class)s_related",related_query_name="%(app_label)s_%(class)ss",)
+
+
     class Meta:
         abstract = True
         # not that the ordering is case sensitive so the uppercase ordering 
@@ -618,6 +643,9 @@ class CommonClass(models.Model):
         return self.state_name
 
 class BankCustomer(CommonClass):
+
+    # fields may be overridden with another field or value, or be removed by setting ##field_name = None.
+
     customer_name = models.CharField(max_length=100)
 
     # meta inheritance
@@ -633,3 +661,158 @@ class BankCustomer(CommonClass):
     # which means left side class meta is overidded or workover any other classes.
     # class Meta(CommonClass.Meta,Example.Meta):
     #     pass
+
+class ShopCustomer(CommonClass):
+    cust_name = models.CharField(max_length=100)
+
+    class Meta:
+        pass
+
+# 2. multitable inheritance
+
+#  which will create a onetoone relationship between two models
+
+class IphoneModel(models.Model):
+    model_no = models.CharField(max_length=50,blank=True)
+
+    class Meta:
+        ordering = ["model_no"]
+        get_latest_by = "model_no"
+
+
+class Iphone(IphoneModel):
+    name = models.CharField(max_length=100)
+    shopcustomer = models.ManyToManyField(ShopCustomer)
+    model_info = models.ManyToManyField(IphoneModel,related_name="model_info")
+
+    # the following work will be automatically done by django
+
+    # we can override the behaviour
+
+    # iphonemodel_ptr = models.OneToOneField(
+    #             IphoneModel,
+    #             on_delete=models.CASCADE,
+    #             parent_link=True,
+    #             primary_key=True,
+            # )
+    
+    # the two meta data which is inherited from parent class is
+    # ordering,get_latest_by
+    # we can override by definning meta in child i.e in this class
+    class Meta:
+        # Remove parent's ordering effect
+        ordering = []
+
+    # as mentioned, Django will automatically create a OneToOneField linking your child class back to 
+    # any non-abstract parent models. If you want to control the name of the attribute linking back to the parent, 
+    # you can create your own OneToOneField and set parent_link=True to indicate that your field is the link back to the parent class
+
+# 2. proxy model inheritance
+
+# proxy model inheritance is used to overide the default behabiour of a parent models
+
+# like we can override the default manager or create new custom methods to validate 
+
+# he difference is that you can change things like the default model ordering or the default manager in the proxy, without having to alter the original.
+
+class ProxyLearn(models.Model):
+    proxy_name = models.CharField(max_length=100)
+    order_no = models.IntegerField()
+
+# the datatable not created in the database but you can see the parent as well as child tables in separate in the admin portal
+
+#A proxy model must inherit from exactly one non-abstract model class. You can’t inherit from multiple non-abstract models as the 
+# proxy model doesn’t provide any connection between the rows in the different database tables. A proxy model can inherit from any number 
+# of abstract model classes, providing they do not define any model fields. A proxy model may also inherit from any number of proxy models 
+# that share a common non-abstract parent class.
+
+class NewManager(models.Manager):
+    pass
+
+class ChildProx(ProxyLearn):
+    # working_days = models.IntegerField() # if we declare this it will through an error like proxy model having model fields
+    class Meta:
+        proxy = True
+
+        # the ordering also overrided by proxy model
+
+        ordering = ["order_no"]
+
+    def validate_order_no(self):
+        pass
+
+    # proxy model managers
+
+    # If you don’t specify any model managers on a proxy model, it inherits the managers from its model parents. 
+    # If you define a manager on the proxy model, it will become the default, 
+    # although any managers defined on the parent classes will still be available
+
+    # it will override the default manager
+
+    objects = NewManager()
+
+    # it will not override the default manager instead we can use both the managers
+
+    custom_manager = CustomManager()
+
+# Differences between proxy inheritance and unmanaged models
+
+# Proxy model inheritance might look fairly similar to creating an unmanaged model, using the managed attribute on a model’s Meta class.
+
+# With careful setting of Meta.db_table you could create an unmanaged model that shadows an existing model and adds Python methods to it. 
+# However, that would be very repetitive and fragile as you need to keep both copies synchronized if you make any changes.
+
+# On the other hand, proxy models are intended to behave exactly like the model they are proxying for. They are always in sync with the 
+# parent model since they directly inherit its fields and managers.
+
+# The general rules are:
+
+#     If you are mirroring an existing model or database table and don’t want all the original database table columns, use Meta.managed=False. 
+# That option is normally useful for modeling database views and tables not under the control of Django.
+#     If you are wanting to change the Python-only behavior of a model, but keep all the same fields as in the original, use Meta.proxy=True. 
+# This sets things up so that the proxy model is an exact copy of the storage structure of the original model when data is saved.
+
+
+# 3.Multiple inheritance
+# Note that inheriting from multiple models that have a common id primary key field will raise an error. 
+# To properly use multiple inheritance, you can use an explicit AutoField in the base models:
+
+# in the below models the primary key is not auto genarated id field, it is explicitly menthioned
+
+# if not mentions the two models having auto generated id field so throwing an error 
+
+# same field names not allowed.
+
+class Article(models.Model):
+    article_id = models.AutoField(primary_key=True)
+    names = models.CharField(max_length=100)
+
+class Book(models.Model):
+    book_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=100)
+
+class BookReview(Book, Article):
+    pass
+
+# or
+
+# Or use a common ancestor to hold the AutoField. This requires using an explicit OneToOneField from each parent model to the common ancestor
+#  to avoid a clash between the fields that are automatically generated and inherited by the child:
+
+# n normal Python class inheritance, it is permissible for a child class to override any attribute from the parent class. In Django, this isn’t usually permitted for model fields
+
+# class Piece(models.Model):
+#     pass
+
+
+# class Article(Piece):
+#     article_piece = models.OneToOneField(
+#         Piece, on_delete=models.CASCADE, parent_link=True
+#     )
+
+# class Book(Piece):
+#     book_piece = models.OneToOneField(Piece, on_delete=models.CASCADE, parent_link=True)
+
+# class BookReview(Book, Article):
+#     pass
+

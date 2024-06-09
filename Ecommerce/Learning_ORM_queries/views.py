@@ -901,7 +901,7 @@ def and_or(request):
     all_entry = Entry.objects.filter(headline__startswith="C").filter(rating = 3)
     all_entry = Entry.objects.filter(headline__startswith="C",rating = 3)
 
-    all_entry = Entry.objects.filter(Q(headline__startswith="C") & Q(rating = 3))
+    all_entry = Entry.objects.filter(Q(headline__startswith="C") & ~Q(rating = 3))
     all_entry = Entry.objects.filter(headline__startswith="C") & Entry.objects.filter(rating = 3)
 
     # or condition
@@ -1449,3 +1449,21 @@ def revise(request):
     all_entry.save()
     all_entry = [all_entry]
     return render(request,"learning_orm_queries/index.html",{"all_entry":all_entry or entry_all})
+
+# from datetime import timedelta
+# Entry.objects.filter(mod_date__gt=F("pub_date") + timedelta(days=3))
+# Blog.objects.filter(pk__gt=14)
+
+
+# To compare two model instances, use the standard Python comparison operator, the double equals sign: ==. Behind the scenes, that compares the primary key values of two models.
+
+# Using the Entry example above, the following two statements are equivalent:
+
+# >>> some_entry == other_entry
+# >>> some_entry.id == other_entry.id
+
+# If a model’s primary key isn’t called id, no problem. Comparisons will always use the primary key, whatever it’s called. For example, if a model’s primary key field is called name, these two statements are equivalent:
+
+# >>> some_obj == other_obj
+# >>> some_obj.name == other_obj.name
+

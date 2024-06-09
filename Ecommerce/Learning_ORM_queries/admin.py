@@ -25,6 +25,17 @@ admin.site.register(Person)
 admin.site.register(LearnModel)
 admin.site.register(LearnValidate)
 admin.site.register(BankCustomer)
+admin.site.register(ShopCustomer)
+admin.site.register(IphoneModel)
+admin.site.register(Iphone)
+admin.site.register(ProxyLearn)
+admin.site.register(ChildProx)
+admin.site.register(Rating)
+
+
+
+
+
 
 
 

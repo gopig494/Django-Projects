@@ -288,6 +288,282 @@ def model_inheritance(request):
         print("---c---",c.country_name)
         print("---c---",c.customer_name)
     
+    va = LearnValidate.objects.all()
+    for v in va:
+        print("---va--m",v.learning_orm_queries_shopcustomer_related.all())
+        # print("---va--m",v.shopcustomer_set.all())
+
+    iphone = Iphone.objects.all()
+    print("---repr",repr(iphone))
+    print("---print",iphone)
+    for v in iphone:
+        print("---iphone--",v.id)
+
+    iphone = IphoneModel.objects.get(id=1)
+    print("---iphone-related-",v.iphone.id)
+
+    # we can access the proxy xustom defined methods by the manager as well as creating objects for the model
+
+    # the crud operation also can able to do by the proxy model
+
+    proxy = ChildProx(proxy_name="kk",order_no=1)
+    proxy.save()
+
+    proxy = ChildProx.objects.get(id=1)
+
+    proxy.validate_order_no()
+
+    # import asyncio
+
+    # asyncio.run(main())
+
+    print("----async function")
 
 
     return HttpResponse("test model inheritance")
+
+# async def main():
+#     await astnc_pro()
+
+# async def astnc_pro():
+#     import asyncio
+#     iphone = Iphone.objects.all()
+#     print("---repr",repr(iphone))
+#     async for v in iphone:
+#         asyncio.sleep(10)
+#         print("---ipho<<>>><>ne--",v.id)
+
+
+def learn_aggerigation(request):
+
+    # 1.count
+
+    count = ProxyLearn.objects.count()
+
+    print("---count without filter filter",count)
+
+    filter_count = ProxyLearn.objects.filter(proxy_name = 'porur').count()
+
+    print("---count filter",filter_count)
+
+
+    # 2.AVG
+
+    from django.db.models import Avg
+
+    avg = ProxyLearn.objects.aggregate(Avg("order_no",default = 0))
+
+    print("----avg without filter---",avg) #'order_no__avg': 1.0666666666666667}
+
+    avg_filter = ProxyLearn.objects.filter(proxy_name="porur").aggregate(Avg("order_no",default = 0))
+
+    print("----avg filter---",avg_filter) #{'order_no__avg': 1.0}
+
+
+    # 3.Max
+
+    from django.db.models import Max
+
+    max = ProxyLearn.objects.aggregate(Max("order_no",default = 0))
+
+    print("----max without filter---",max) #{'order_no__max': 2}
+
+    max_filter = ProxyLearn.objects.filter(proxy_name="porur").aggregate(Max("order_no",default = 0))
+
+    print("----max filter---",max_filter) # {'order_no__max': 1}
+
+    # 4.Min
+
+    from django.db.models import Min
+
+    min = ProxyLearn.objects.aggregate(Min("order_no",default = 0))
+
+    print("----min without filter---",min) #{'order_no__min': 1}
+
+    min_filter = ProxyLearn.objects.filter(proxy_name="porur").aggregate(Min("order_no",default = 0))
+
+    print("----min filter---",min_filter) # {'order_no__min': 1}
+
+    # doing some arethematic operation
+
+    from django.db.models import FloatField
+
+    res = ProxyLearn.objects.aggregate(resp = Min("order_no",output_field = FloatField(),default = 0) - Avg("order_no"))
+
+    print("---arthematic ope--",res) #{'resp': -0.06666666666666665}
+
+    # above and below codes are same
+
+    res = ProxyLearn.objects.aggregate(resp = Min("order_no") - Avg("order_no"))
+
+    print("---arthematic ope--",res)
+
+    # annotate vs aggeregate
+
+    from django.db.models import Sum
+
+    # aggregate is a method that computes a single value from a queryset, often by grouping the results. 
+    # It returns a dictionary with the aggregated values.
+
+    # annotate is a method that adds a new attribute to each object in a queryset, based on a calculation or aggregation. 
+    # It allows you to compute a value for each object in the queryset, without grouping the results.
+
+    # supposse if consider order_no as a product price then we have to calculate discount for each price
+    # how could we done is we can simple annotate then give the discount percentage like below 
+
+    anno = ProxyLearn.objects.annotate(discount_order_no = F("order_no") * 10/100 )
+
+    for an in anno:
+        print("---an",an.discount_order_no)
+
+    # use annotate with aggregate function
+
+    # if you not able to unserstand see the proxylearn model
+
+    anno = ProxyLearn.objects.annotate(avg_rating = Avg("review__rating"),total_rating = Sum("review__rating"))
+
+
+    for an in anno:
+        print("---an--2",an.avg_rating)
+        print("---an--2",an.total_rating)
+
+    # another way to use annotate using when case
+
+    from django.db.models import Case,When
+
+    anno = ProxyLearn.objects.annotate(pub = Case(
+                When(proxy_name="porur",then="proxy_name"),
+                default="proxy_name"
+    ))
+
+    # These are just a few examples of how you can use annotate to add new attributes to a queryset in Django's ORM. The possibilities are endless!
+
+    # end
+
+    for an in anno:
+        print("---an--3",an.pub)
+
+    agg = ProxyLearn.objects.aggregate(total = Sum("order_no")) #total is custom key
+
+    print("--agg",agg)
+
+    # >>> from django.db.models import Avg, Max, Min
+    # >>> Book.objects.aggregate(Avg("price"), Max("price"), Min("price"))
+    # {'price__avg': 34.35, 'price__max': Decimal('81.20'), 'price__min': Decimal('12.99')}
+
+    # we can filter the count of distinct values like example below
+
+    from django.db.models import Count
+
+    unique_count = ProxyLearn.objects.aggregate(uni_count = Count("order_no",distinct=True))
+
+    print("---unique count--",unique_count)
+
+    # use aggerigation for relationship fields like many to many fields
+
+    # it will aggeregate the whole relationship fields values so the output will be object not list like single aggeregation
+
+    anno = ProxyLearn.objects.aggregate(avg_rating = Avg("review__rating"),total_rating = Sum("review__rating"))
+
+    print("----anno use agg for manyt to many----",anno)
+
+    # we can use any filters lookup in aggerregation like filter indeep like below examples
+
+
+    anno = Rating.objects.aggregate(avg_order_no = Avg("proxylearn__order_no"),total_order_no = Sum("proxylearn__order_no"))
+
+    print("----anno use ageg to relationship fields----",anno)
+
+
+    # using filter and exclude in aggergations and annotate function
+
+    filter_anno = ProxyLearn.objects.filter(proxy_name="porur").annotate(avg_rating = Avg("review__rating"),total_rating = Sum("review__rating"))
+
+    for f_an in filter_anno:
+        print("---f_an--",f_an.avg_rating)
+        print("---f_an--",f_an.total_rating)
+
+    filter_anno = Rating.objects.filter(review = "ok").aggregate(avg_order_no = Avg("proxylearn__order_no"),total_order_no = Sum("proxylearn__order_no"))
+
+    print("----filter_anno use ageg to relationship fields----",filter_anno)
+
+    # the filter can be used after the annotate also possible
+    # but it won't work for aggeregate functions
+
+    filter_anno = ProxyLearn.objects.annotate(avg_rating = Avg("review__rating"),total_rating = Sum("review__rating")).filter(proxy_name="porur")
+
+    for f_an in filter_anno:
+        print("---filter after agg--",f_an.avg_rating)
+        print("---ilter after agg--",f_an.total_rating)
+
+    # we can have the dynamic filter in variale name then apply to the query set is possible
+
+    highly_rated = Count("proxylearn", filter=Q(proxylearn__order_no__gte=7))
+    rat = Rating.objects.annotate(num_books=Count("proxylearn"), highly_rated_books=highly_rated)
+
+    for f_an in rat:
+        print("---filter after agg--",f_an.num_books)
+        print("---filter after agg--",f_an.highly_rated_books)
+    
+    # use filter inside the aggregation function is possible
+
+    # but it was not adviceable #first use filter then use aggerigation is most efficient way 
+
+    # if we want to filter first use the filter then use annotate or aggerigation is most efficient way to query
+
+    filter_anno = Rating.objects.aggregate(avg_order_no = Avg("proxylearn__order_no",filter = Q(review = "ok")),total_order_no = Sum("proxylearn__order_no"))
+
+    print("----filter_anno use ageg to relationship fields----",filter_anno)
+
+
+    # view waht SQL query will executed during the orm process the query setqueryset
+
+
+    filter_anno = Rating.objects.all()
+    
+    print("---query set query",str(filter_anno.query))
+
+    # order_by in annotation
+
+    filter_anno = ProxyLearn.objects.annotate(avg_rating = Avg("review__rating"),total_rating = Sum("review__rating")).filter(proxy_name="porur").order_by("avg_rating")
+
+    # values in annotation which acts as a like GROUP BY 
+
+    #GROUP BY
+
+    # so the sum of value will be calculated but the grouping will be depends on the 'values' function fields 
+
+    g_val = ProxyLearn.objects.values("proxy_name").annotate(sum_rating = Sum("review__rating"))
+
+    print("----g_val----",g_val)
+    
+    for g in g_val:
+        print(f"----g--{g.get('proxy_name')}----",g.get("count_rating"))
+    
+    # count
+
+    g_val = ProxyLearn.objects.values("proxy_name").annotate(count_rating = Count("review__rating"))
+
+    print("----count----",g_val)
+    
+    for g in g_val:
+        print(f"----count--{g.get('proxy_name')}----",g.get("count_rating"))
+
+    # values after annotate
+
+    # the group by will not happend so use values first and then use annotate
+
+    g_val = ProxyLearn.objects.annotate(sum_rating = Sum("review__rating")).values("proxy_name","sum_rating")
+
+    print("----g_val--33333--",g_val)
+    
+    for g in g_val:
+        print(f"--333--g--{g.get('proxy_name')}----",g.get("sum_rating"))
+
+    # use annotate and aggregate in same query
+
+    rat = Rating.objects.annotate(num_books=Count("proxylearn")).aggregate(Sum("num_books"))
+
+    print("-------rat---------",rat)
+
+    return HttpResponse("Aggerigation")

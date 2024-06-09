@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     "product_management",
     "customer",
     "rest_framework",
-    "Learning_ORM_queries"
+    "Learning_ORM_queries",
+    # "Learning_ORM_queries.custom_models",
 ]
 
 MIDDLEWARE = [
