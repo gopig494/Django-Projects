@@ -28,6 +28,7 @@ urlpatterns = [
     path("learn_sql_store_procedure/",learn_sql_store_procedure),
     path("model_inheritance/",model_inheritance),
     path("learn_aggerigation/",learn_aggerigation),
+    path("learn_search/",learn_search),
     
 ] 
 

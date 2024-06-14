@@ -31,6 +31,8 @@ admin.site.register(Iphone)
 admin.site.register(ProxyLearn)
 admin.site.register(ChildProx)
 admin.site.register(Rating)
+admin.site.register(SearchKey)
+
 
 
 

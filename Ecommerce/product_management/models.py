@@ -170,8 +170,8 @@ class FieldTypesCheckL(models.Model):
     enum_choices = models.CharField(max_length=100,choices = Bike)
     # moon_landing = models.CharField(max_length=100,choices = MoonLandings)
 
-    dd_default = models.CharField(max_length=10,db_default = "i am de default",blank=True)
-    dd_index = models.CharField(max_length=10,db_index = True,blank=True)
+    dd_default = models.CharField(max_length=100,db_default = "i am",blank=True)
+    dd_index = models.CharField(max_length=100,db_index = True,blank=True)
 
 
     # json_ob = models.JSONField(editable=False,default = json_fun(),null=True)

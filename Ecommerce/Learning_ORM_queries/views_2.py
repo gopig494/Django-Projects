@@ -567,3 +567,162 @@ def learn_aggerigation(request):
     print("-------rat---------",rat)
 
     return HttpResponse("Aggerigation")
+
+def learn_search(re):
+
+    # SQL like %jj% filter
+
+    search_result = SearchKey.objects.filter(search_keyword__icontains = "RUR")
+
+    # search can be use only in postgresql and we have to mention the app in settings 
+
+    # i.e django.contrib.postgres
+
+    search_result = SearchKey.objects.filter(full_description__search = "RUR")
+
+    # print("---search_result----.",search_result)
+
+    for result in search_result:
+        print("---search_keyword----.",result.search_keyword)
+
+    # full text to search 
+
+    # using search vector
+    
+    from django.contrib.postgres.search import SearchVector,SearchQuery,SearchRank
+
+    # in this below query search vector is a method for full text to search 
+
+    # and the args for searchvector is which field should be search
+
+    # then filter search is what should be search
+
+    # the result will be an array
+
+    # it will return exact match only
+
+    # and also if the text found any of one field it will return the resut
+
+    # way 1 #it will returns all the field values like get_doc
+
+    result = SearchKey.objects.annotate(search = SearchVector("search_keyword","rating__review",
+                "proxy_learn__proxy_name")).filter(search="porur")
+    
+    print("---result--1--",result)
+
+    for k in result:
+        print("----------ss",k.rating)
+
+    # way 2
+
+    result = SearchKey.objects.annotate(search = SearchVector("search_keyword") + SearchVector("rating__review") 
+                                        + SearchVector("proxy_learn__proxy_name")).filter(search="porur")
+    
+    print("---result--2--",result)
+
+
+    # using SearchQuery
+
+    # class SearchQuery(value, config=None, search_type='plain')
+
+    # SearchQuery translates the terms the user provides into a search query object that the database compares to a 
+    # search vector. By default, all the words the user provides are passed through the stemming algorithms, and then it 
+    # looks for matches for all of the resulting terms.
+
+    # sq1 and sq2 are same like it will search by porur then test
+
+    # by default the search type is plain
+
+    # When you create a SearchQuery object without specifying a model, it will search across all models that have a SearchVector field configured.
+
+    sq1 = SearchQuery("porur test")
+
+    vector =  SearchVector("search_keyword")
+
+    result = SearchKey.objects.annotate(search = vector).filter(search = sq1)
+
+    print("----sq-1--result--",result)
+
+    sq2 = SearchQuery("test porur")
+
+    result = SearchKey.objects.annotate(search = vector).filter(search = sq2)
+
+    print("----sq-2--result--",result)
+
+    # in this below it will search by 'test porur' together and sq3 and sq4 are the different query and result
+
+    sq3 = SearchQuery("test porur",search_type="phrase") 
+
+    result = SearchKey.objects.annotate(search = vector).filter(search = sq3)
+
+    print("----sq-3--result--",result)   
+
+    sq4 = SearchQuery("porur test",search_type="phrase")    
+
+    result = SearchKey.objects.annotate(search = vector).filter(search = sq4)
+
+    print("----sq-4--result--",result)
+
+    # web search  #like logical operators
+
+    sq5 = SearchQuery("'porur' ('test' OR 'nontest')  ",search_type="websearch") 
+
+    result = SearchKey.objects.annotate(search = vector).filter(search = sq5)
+
+    print("----sq-5--result--",result)
+
+    # raw search
+
+    sq6 = SearchQuery("'porur' & ('test' | 'nontest')  ",search_type="websearch")
+
+    result = SearchKey.objects.annotate(search = vector).filter(search = sq6)
+
+    print("----sq-6--result--",result)
+
+    # these above search can be writtened most understable way like below
+
+    sq12 = SearchQuery("porur") & SearchQuery("test")
+
+    sq22 = SearchQuery("porur") | SearchQuery("test")
+
+    result = SearchKey.objects.annotate(search = vector).filter(search = sq22)
+
+    print("----sq-22--result--",result)
+
+    sq32 = ~SearchQuery("porur") #not
+
+    # learn about search rank
+
+    # way 1
+
+    rank1 = SearchRank(vector,sq22)
+
+    result = SearchKey.objects.annotate(rank = rank1).order_by("-rank")
+
+    print("-------rant 1---",result)
+
+    for r in result:
+        print(f"----rant ---{r.rank}--",r.search_keyword)
+
+    # way 2 #both are same only
+
+    rank2 = SearchRank("search_keyword","porur")
+
+    result = SearchKey.objects.annotate(rank = rank2).order_by("-rank")
+
+    print("-------rant 2---",result)
+
+    for r in result:
+        print(f"----rant ---{r.rank}--",r.search_keyword)
+
+    # we filter the result by rank
+
+    result = SearchKey.objects.annotate(rank = rank2).filter(rank__gte=0.001).order_by("-rank")
+
+    print("-------rant 3---",result)
+
+    for r in result:
+        print(f"----rant ---{r.rank}--",r.search_keyword)
+
+
+    return HttpResponse("Search")

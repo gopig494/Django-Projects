@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='fieldtypescheckl',
             name='dd_default',
-            field=models.CharField(blank=True, db_default='i am de default', max_length=10),
+            field=models.CharField(blank=True, db_default='i am de default', max_length=100),
         ),
     ]
