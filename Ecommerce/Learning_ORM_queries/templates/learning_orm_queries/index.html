@@ -31,3 +31,24 @@
     {% endfor %}
 
 {% endif %}
+
+{% if search %}
+<div style="display:flex;flex-direction:column;gap:0px">
+    {% for k in search %}
+        <p>
+        {{k.headline}}
+        {{k.rank}}
+        </p>
+        {% endfor %}
+</div>
+{% endif %}
+
+{% if db_fun %}
+<div style="display:flex;flex-direction:column;gap:0px">
+    {% for k in db_fun %}
+        <p>
+        {{k | safe}}
+        </p>
+        {% endfor %}
+</div>
+{% endif %}

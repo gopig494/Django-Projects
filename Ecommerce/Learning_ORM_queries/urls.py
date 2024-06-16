@@ -29,6 +29,7 @@ urlpatterns = [
     path("model_inheritance/",model_inheritance),
     path("learn_aggerigation/",learn_aggerigation),
     path("learn_search/",learn_search),
+    path("learn_database_functions/",learn_database_functions),
     
 ] 
 

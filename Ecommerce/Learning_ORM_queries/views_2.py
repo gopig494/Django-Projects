@@ -589,7 +589,7 @@ def learn_search(re):
 
     # using search vector
     
-    from django.contrib.postgres.search import SearchVector,SearchQuery,SearchRank
+    from django.contrib.postgres.search import SearchVector,SearchQuery,SearchRank,SearchHeadline
 
     # in this below query search vector is a method for full text to search 
 
@@ -724,5 +724,258 @@ def learn_search(re):
     for r in result:
         print(f"----rant ---{r.rank}--",r.search_keyword)
 
+    # Learn about search headline
+    # class SearchHeadline(expression, query, config=None, start_sel=None, stop_sel=None, max_words=None, min_words=None, short_word=None, highlight_all=None, max_fragments=None, fragment_delimiter=None)
+
+    # Set the start_sel and stop_sel parameters to the string values to be used to wrap highlighted query terms in the document. PostgreSQL’s defaults are <b> and </b>.
+
+    # Provide integer values to the max_words and min_words parameters to determine the longest and shortest headlines. PostgreSQL’s defaults are 35 and 15.
+
+    # Provide an integer value to the short_word parameter to discard words of this length or less in each headline. PostgreSQL’s default is 3.
+
+    # Set the highlight_all parameter to True to use the whole document in place of a fragment and ignore max_words, min_words, and short_word parameters. That’s disabled by default in PostgreSQL.
+
+    # Provide a non-zero integer value to the max_fragments to set the maximum number of fragments to display. That’s disabled by default in PostgreSQL.
+
+    # Set the fragment_delimiter string parameter to configure the delimiter between fragments. PostgreSQL’s default is
+
+    # vectorh = SearchVector("search_keyword")
+
+    search_query = SearchQuery("porur")
+    
+    head_result = SearchKey.objects.annotate(headline = SearchHeadline("search_keyword",search_query))
+
+    print("--head_result--1--",head_result)
+
+    for k in head_result:
+        print("---h-r-q",k.search_keyword)
+    
+    head_result = SearchKey.objects.annotate(headline = SearchHeadline("search_keyword",search_query,start_sel="<span>",stop_sel="</span>"))
+
+    # using different configurations
+
+    head_result = SearchKey.objects.annotate(search = SearchVector("search_keyword",config="english")).filter(search = SearchQuery("porur",config="english"))
+
+    # we can use fields also
+
+    head_result = SearchKey.objects.annotate(search = SearchVector("search_keyword")).filter(search = SearchQuery(F("search_keyword")))
+
+    # dynamic language
+
+    # head_result = SearchKey.objects.annotate(search = SearchVector("search_keyword",config=F("language"))).filter(search = SearchQuery("porur",config=F("language")))
+
+    # using weight in search is like raning 
+
+    # The weight should be one of the following letters: D, C, B, A. By default, these weights refer to the numbers 0.1, 0.2, 0.4, and 1.0, respectively. If you wish to weight them differently, pass a list of four floats to SearchRank as weights in the same order above:
+
+
+    sq1 = SearchQuery("porur")
+
+    vector =  SearchVector("search_keyword",weight="A")
+
+    rank2 = SearchRank(vector,sq1)
+
+    result = SearchKey.objects.annotate(rank = rank2).order_by("-rank")
+
+    rank2 = SearchRank("search_keyword","porur")
+
+    result = SearchKey.objects.annotate(rank = rank2).order_by("-rank")
+
+    vector =  SearchVector("search_keyword")
+
+    rank2 = SearchRank(vector,sq1,weights=[0.2, 0.4, 0.6, 0.8])
+
+    rank2 = SearchRank("search_keyword","porur",weights=[0.2, 0.4, 0.6, 0.8])
+
+    result = SearchKey.objects.annotate(rank = rank2).order_by("-rank")
+
+    # update search vector value
+
+    # this is the way to update the vector if you want to use the search vector field to improve the search performance.
+
+    val = SearchKey.objects.get(id=1)
+    val.search_vector = "porur test"
+    print("----val---",val.search_vector)
+    val.save()
+
+    re = SearchKey.objects.annotate(search = SearchVector("search_vector")).filter(search=SearchQuery("TEST"))
+
+    print("---re---",re)
+
+    # return render(re,"learning_orm_queries/index.html",{"search":re})
+
+    # learn about trigram similarity
+
+    learn_trigram()
+
+    learn_accent_unaccent()
 
     return HttpResponse("Search")
+
+
+def learn_trigram():
+    # Trigram similarity
+    # to use this first we have to activate the trigram in postgresql
+    # by using the terminal command we can activate it
+    # first looged into to postgrsql using user name like bench mariadb
+    # then select database using the command \c django_learning
+    # CREATE EXTENSION IF NOT EXISTS pg_trgm;
+    # check if it is created or not
+    # SELECT * FROM pg_extension WHERE extname = 'pg_trgm';
+
+    # type 1
+
+    # class TrigramSimilarity(expression, string, **extra)
+
+    # Trigrams are sequences of three consecutive characters within a string. This approach is particularly useful for performing fuzzy text searching and similarity-based ranking in Django applications that use PostgreSQL as the database backend.
+
+    # Benefits of Trigram Similarity:
+
+    # Fuzzy Matching: It allows finding results that are similar but not necessarily identical to the search query, which is useful for handling typos and variations in user input.
+
+    # Performance: Trigram indexes in PostgreSQL can significantly speed up text search queries, especially for large datasets, compared to traditional full-text search approaches.
+
+    # Integration with Django: Django's integration with PostgreSQL's trigram features simplifies implementing advanced text search capabilities without requiring additional external libraries or tools.
+
+    from django.contrib.postgres.search import TrigramSimilarity,TrigramDistance,TrigramWordSimilarity,TrigramStrictWordSimilarity
+
+    re = SearchKey.objects.annotate(similarity = TrigramSimilarity("search_keyword","tes")).filter(similarity__gt=0.3).order_by("-similarity")
+
+    print("---re--1---similarity----",re)
+
+
+    # type 2
+
+    # class TrigramWordSimilarity(string, expression, **extra)
+
+    re = SearchKey.objects.annotate(similarity = TrigramWordSimilarity("tes","search_keyword")).filter(similarity__gt=0.3).order_by("-similarity")
+
+    print("---re--2---similarity-word---",re)
+
+    # difference betwwen the trigramsimilarity and trigramwordsimilarity is
+
+    # both are is saving patterns like if we give 'india test' i will 
+
+    # The trigram patterns for "india test" using TrigramSimilarity would be:
+
+    # ind (from "india")
+    # dia (from "india")
+    # iat (from "india")
+    # tes (from "test")
+    # est (from "test")
+
+    # TrigramWordSimilarity
+
+    # The trigram patterns for "india test" using TrigramWordSimilarity would be:
+
+    # ind (from "india")
+    # dia (from "india")
+    # tes (from "test")
+    # est (from "test")
+
+    # Use TrigramSimilarity when you want a more relaxed measure of similarity, allowing for minor variations in word forms or typos.
+    # Use TrigramWordSimilarity when you want a more exact measure of similarity, requiring an exact match of the entire word.
+
+    # exmaple i have two record one having 'test' another is 'porur test'
+
+    # if we trying to search 'tes' in both types
+
+    # the trigramsimilarity is giving one result which is 'test' record because which match 'tes'
+
+    # but the trigramwordsimilarity is giving both the record 'test' and 'porur test' 
+
+    re = SearchKey.objects.annotate(similarity = TrigramSimilarity("search_keyword","indian")).filter(similarity__gt=0.3).order_by("-similarity")
+
+    print("---re--1---similarity-2---",re)
+    
+    
+    re = SearchKey.objects.annotate(similarity = TrigramWordSimilarity("indian","search_keyword")).filter(similarity__gt=0.3).order_by("-similarity")
+
+    print("---re--2---similarity-word--2-",re)
+
+    # important example to  unserstand the TrigramWordSimilarity and rigramWordSimilarity
+
+    # If you have a product called 'iPhone 14 Pro', both methods should return this product in the search results, 
+    # since '14 pro' is a substring of the product name. However, the TrigramSimilarity method may also return other 
+    # products with similar trigram patterns, such as 'iPhone 14 Pro Max' or 'iPhone 14 Pro Case', while the TrigramWordSimilarity 
+    # method may return products with similar words, such as 'iPhone Pro' or '14 inch Laptop'.
+
+    # TrigramStrictWordSimilarity
+
+    # it is similar to TrigramWordSimilarity but match the exact trigram strictly TrigramStrictWordSimilarity
+
+    re = SearchKey.objects.annotate(similarity = TrigramStrictWordSimilarity("indian","search_keyword")).filter(similarity__gt=0.3).order_by("-similarity")
+
+    print("---re--3---similarity-word--3-",re)
+
+    # -----------------TrigramDistance---------------
+
+    # class TrigramDistance(expression, string, **extra)
+
+    # Identify Trigrams: First, the algorithm extracts all possible trigrams from both strings. For example, the trigrams of the string "apple" would be "app", "ppl", "ple".
+
+    # Compare Trigrams: It then counts how many trigrams are common between the two strings. The more trigrams they share, the more similar the strings are considered to be.
+
+    # Calculate Distance: Trigram distance is often calculated as the complement of the number of shared trigrams divided by the total number of distinct trigrams present in both strings. Alternatively, it can also be represented as a similarity measure, where the distance is the ratio of shared trigrams to the total number of distinct trigrams.
+
+    # Trigram distance can be useful in various applications such as spell checking, plagiarism detection, and string matching, where it helps determine how closely two strings resemble each other based on their character sequences. It’s a simple yet effective way to gauge similarity in terms of character sequence overlap.
+
+    re = SearchKey.objects.annotate(distance = TrigramDistance("search_keyword","indian")).filter(distance__lte=0.3).order_by("-distance")
+
+    print("---re--1---trigram--distance--1-",re)
+
+    # TrigramWordDistance¶ -------------------2
+
+    # class TrigramWordDistance(string, expression, **extra)
+
+    # TrigramStrictWordDistance¶ ----------------3
+
+    # class TrigramStrictWordDistance(string, expression, **extra)
+
+
+    # default functions in postgresql-----------------
+
+    # 1 trigram_similar
+
+    trigr = SearchKey.objects.filter(search_keyword__trigram_similar="test")
+
+    print("--trigr--1-",trigr)
+
+    # 2 trigram_word_similar
+
+    trigr = SearchKey.objects.filter(search_keyword__trigram_word_similar="test")
+
+    print("--trigr--2-",trigr)
+
+    # 3 trigram_strict_word_similar
+
+    tr = SearchKey.objects.filter(search_keyword__trigram_strict_word_similar="test")
+
+    print("--trigr--3-",tr)
+
+
+def learn_accent_unaccent():
+    # Here are some common examples of accents and diacritical marks:
+
+    # Acute Accent (´): A mark placed above a vowel to indicate stress or sometimes a change in pronunciation. For example, in Spanish, "á" is pronounced differently from "a".
+
+    # SELECT * FROM persons 
+    # WHERE f_unaccent(name) ILIKE f_unaccent('%Jose%')
+
+    # ---------add extension in db level
+
+    # CREATE EXTENSION IF NOT EXISTS unaccent;
+
+    # The unaccent lookup can be used on CharField and TextField:
+
+    # unac = SearchKey.objects.filter(search_keyword__unaccent="test")
+
+    pass
+
+    # print("----unaccent--1",unac)
+
+def learn_database_functions(re):
+
+    result = []
+
+    return render(re,"learning_orm_queries/index.html",{"db_fun":result})
