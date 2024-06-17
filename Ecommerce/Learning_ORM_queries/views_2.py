@@ -978,4 +978,123 @@ def learn_database_functions(re):
 
     result = []
 
+
+
     return render(re,"learning_orm_queries/index.html",{"db_fun":result})
+
+
+def learn_query_expressions(re):
+
+    result = []
+
+    from django.db.models.functions import Upper,Length
+
+    # exp - 1
+
+    # -------------------using F
+
+    from django.db.models import F,Value
+
+    result = QueryExps.objects.filter(age__gt = F("nos"))
+
+    result = QueryExps.objects.filter(age__gt = F("nos") * 0)
+
+    result =[ QueryExps.objects.filter(age__gt = F("nos") * 0).first()  ] 
+
+    # so the F function , how it will use in real case and improve the performance like below
+
+    # if you want to increase the age of each record means how could you do normally like below
+
+    result = QueryExps.objects.all()
+
+    for k in result:
+        d = QueryExps.objects.get(pk=k.id)
+        d.age = d.age + 1
+        d.save()
+
+    # the above method is not correct , which mean if we have bulkk records it direct case to performance issue
+
+    # intead of doing this the optimized way is #you cann understand the difference
+
+    result = QueryExps.objects.update(age = F("age") + 1)
+
+    # -------------avoid
+
+    # reporter = Reporters.objects.get(name="Tintin")
+    # reporter.stories_filed = F("stories_filed") + 1
+    # reporter.save()
+
+    # reporter.name = "Tintin Jr."
+    # reporter.save()
+
+    # stories_filed will be updated twice in this case. If it’s initially 1, the final value will be 3. This persistence can be avoided by reloading the model object after saving it, for example, by using refresh_from_db().
+
+    # --using for create dynamic value
+
+    result = QueryExps.objects.annotate(age_no_diff = F("age") - F("nos"))
+
+    # ---------using Floatfield and Decimalfield during above dynamic operation may be error because the python
+    # confuesed too gove result weather in Fload field or Decimalfield so we have to use the output field
+
+    from django.db.models import ExpressionWrapper,FloatField
+
+    result = QueryExps.objects.annotate(age_no_diff = ExpressionWrapper( F("age") - F("nos"),output_field=FloatField())  )
+
+    #---------------null first and null last in order by
+   
+    result = QueryExps.objects.order_by(F("name").desc(nulls_first = True))
+    result = QueryExps.objects.order_by(F("name").desc(nulls_last = True))
+   
+    # ----------invert the boolen field dynamically 
+    
+    # for example if we have check box we have to update it like if it is true have to make false 
+
+    # if it is false have to make it true like we can use like below
+
+    result = QueryExps.objects.update(verified = ~F("verified"))
+
+   
+    #---------------------- Upper
+
+    result = QueryExps.objects.annotate(exe_f = Upper(F("name")))
+
+    # giving static value in upper case to save in db
+
+    result = QueryExps.objects.annotate(exe_f = Upper(Value("name")))
+    
+    # ------------------Length
+
+    # way 1
+
+    result = QueryExps.objects.order_by(Length("name").asc())
+
+    result = QueryExps.objects.order_by(Length("name").desc())
+
+    # way 2 #register the lookup and then use directly like custom lookup
+
+    from django.db.models import CharField
+
+    CharField.register_lookup(Length)
+
+    result = QueryExps.objects.order_by("-name__length")
+
+    #-------------------------------- Exists
+
+    from django.db.models import Exists,OuterRef
+
+    # way 1
+
+    # outref is used to refer outer query field values
+
+    result = QueryExps.objects.filter(Exists(QueryExps.objects.filter(age__lt = 100),age__gt = 0))
+
+    result = QueryExps.objects.filter(Exists(QueryExps.objects.filter(age__lt = OuterRef("age")),age__gt = 0))
+
+    # --------------------------GreaterThan
+
+    from django.db.models.lookups import GreaterThan
+
+    result = QueryExps.objects.filter(GreaterThan(F("age"),0))
+
+
+    return render(re,"learning_orm_queries/index.html",{"q_exp":result})

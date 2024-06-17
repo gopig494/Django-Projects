@@ -42,3 +42,13 @@ class SearchKey(models.Model):
             #way 2
             GinIndex(fields=['search_vector'])
         ]
+
+class QueryExps(models.Model):
+    name = models.CharField(max_length = 100)
+    age = models.IntegerField()
+    nos = models.IntegerField()
+    description = models.TextField()
+    verified = models.BooleanField()
+
+    def __str__(self):
+        return self.name

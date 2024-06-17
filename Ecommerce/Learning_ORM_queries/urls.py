@@ -30,6 +30,7 @@ urlpatterns = [
     path("learn_aggerigation/",learn_aggerigation),
     path("learn_search/",learn_search),
     path("learn_database_functions/",learn_database_functions),
+    path("learn_query_expressions/",learn_query_expressions),
     
 ] 
 

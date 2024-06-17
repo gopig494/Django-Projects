@@ -52,3 +52,21 @@
         {% endfor %}
 </div>
 {% endif %}
+
+
+{% if q_exp %}
+<div style="display:flex;flex-direction:column;gap:0px">
+    {% for k in q_exp %}
+        <ul>
+        <li>{{k.name}}</li>
+        <li>{{k.age}}</li>
+        <li>{{k.nos}}</li>
+        <li>{{k.description}}</li>
+        <li>{{k.verified}}</li>
+        {% if k.exe_f %}
+            {{k.exe_f}}
+        {% endif %}
+        </ul>
+        {% endfor %}
+</div>
+{% endif %}

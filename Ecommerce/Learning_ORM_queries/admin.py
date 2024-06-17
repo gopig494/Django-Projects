@@ -32,6 +32,8 @@ admin.site.register(ProxyLearn)
 admin.site.register(ChildProx)
 admin.site.register(Rating)
 admin.site.register(SearchKey)
+admin.site.register(QueryExps)
+
 
 
 
