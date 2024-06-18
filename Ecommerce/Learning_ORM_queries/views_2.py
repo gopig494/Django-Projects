@@ -987,7 +987,7 @@ def learn_query_expressions(re):
 
     result = []
 
-    from django.db.models.functions import Upper,Length
+    from django.db.models.functions import Upper,Length,Lower
 
     # exp - 1
 
@@ -1060,7 +1060,7 @@ def learn_query_expressions(re):
 
     # giving static value in upper case to save in db
 
-    result = QueryExps.objects.annotate(exe_f = Upper(Value("name")))
+    result = QueryExps.objects.annotate(exe_f = Upper(Value("abcd")))
     
     # ------------------Length
 
@@ -1096,5 +1096,86 @@ def learn_query_expressions(re):
 
     result = QueryExps.objects.filter(GreaterThan(F("age"),0))
 
+    #---------------------- Func() expressions
+
+    from django.db.models import Func
+
+    # both are the same functionality
+
+    result = QueryExps.objects.annotate(exe_f = Func(F("name"), function = "Lower"))
+
+    result = QueryExps.objects.annotate(exe_f = Lower(F("name")))
+
+    print("---------------***result----",result)
+
+    result = learn_condition_expression()
 
     return render(re,"learning_orm_queries/index.html",{"q_exp":result})
+
+# --------------------------------------------------
+
+def learn_condition_expression():
+    # ---using when case then default output field
+    
+    from django.db.models import When,Value,Case,CharField
+
+    result = []
+
+    result = QueryExps.objects.annotate(exe_f = Case(When(name__icontains = "sh",then=Value("dines")),
+                                         When(age__gt = 50,then = F("description")),
+                                         default=Value("poda"),
+                                         output_field = CharField()
+                                          ))
+
+    result = QueryExps.objects.annotate(exe_f = Case(When(name__icontains = "sh",then=Value("dines")),
+                                         When(age__gt = 50,then = F("description")),
+                                         default=Value("poda"),
+                                         output_field = CharField()
+                                          )).filter(exe_f__isnull=False)
+
+    # values vs values list
+
+    # values are key values pairs and which initiate the model instance to get the field name
+
+    # values_list are tuple of values there is no need to initiate the model instance
+
+    # when dealing with large data sets and performance needed the valuelist is perform better
+
+    # when needed key value pair list the values is better
+
+    
+    result = QueryExps.objects.annotate(exe_f = Case(When(name__icontains = "sh",then=Value("dines")),
+                                         When(age__gt = 50,then = F("description")),
+                                         default=Value("poda"),
+                                         output_field = CharField()
+                                          )).filter(exe_f__isnull=False).values_list()
+
+
+    result = QueryExps.objects.annotate(exe_f = Case(When(name__icontains = "sh",then=Value("dines")),
+                                         When(age__gt = 50,then = F("description")),
+                                         default=Value("poda"),
+                                         output_field = CharField()
+                                          )).filter(exe_f__isnull=False).values()
+    
+    # -----when case not only with annotate and can be usd with filter also
+
+
+    result = QueryExps.objects.filter(name__icontains = Case(
+                                                            When(age__gt=50,then=F("name")),
+                                                            default = Value("poda"),
+                                                            output_field = CharField())
+                                                            ).values()
+    
+    # -----use conditional expression in update
+
+    from django.db.models import IntegerField
+    
+    result = QueryExps.objects.update(age = Case(When(name__icontains = "nesh",then=Value(1)),default = Value(1000),output_field=IntegerField()))
+
+    result = [QueryExps.objects.get(pk=result)]
+
+    print("------------re---",result)
+
+    return result
+    
+
