@@ -1110,6 +1110,65 @@ def learn_query_expressions(re):
 
     result = learn_condition_expression()
 
+     #------------------- use Subquery 
+
+    # class Subquery(queryset, output_field=None)
+
+    from django.db.models import Subquery
+
+    # subquery is like real sql subquery only
+
+    # this is not subquery but short way to use like subquery
+
+    result = QueryExps.objects.filter(name = QueryExps.objects.filter(name="Dinesh")[0].name)
+
+    # subquery
+
+    result = QueryExps.objects.filter(name = Subquery(QueryExps.objects.filter(name__icontains="sh").values_list("name")[:1]))
+
+    # -------------------- class OuterRef(field)
+
+    from django.db.models import OuterRef
+
+    # --here get won't work
+
+    # result = QueryExps.objects.filter(name = Subquery(QueryExps.objects.get(pk = OuterRef("pk"))))
+
+    # below --filter is correct query---
+
+    subquery = QueryExps.objects.filter(pk=OuterRef("pk")).values('name')
+    result = QueryExps.objects.filter(name=Subquery(subquery))
+
+    # -----using with filer,values,calues_list
+
+    # >>> from django.db.models import OuterRef, Subquery, Sum
+    # >>> comments = Comment.objects.filter(post=OuterRef("pk")).order_by().values("post")
+    # >>> total_comments = comments.annotate(total=Sum("length")).values("total")
+    # >>> Post.objects.filter(length__gt=Subquery(total_comments))
+
+    # ---raw vs rawsql
+
+    # ---raw like django model instance queryset only but we can write sql condition
+
+    # The raw method in Django is used to execute raw SQL queries and return model instances. It allows you to write custom SQL queries and map the results directly to Django model instances. 
+
+    # : It returns a RawQuerySet instance, which behaves like a normal QuerySet but represents raw query results as model instances.
+    # The columns selected in the raw SQL query must correspond to fields in the Django model. Django uses the model's _meta information to map columns to model fields.
+    
+    result = QueryExps.objects.raw("SELECT * FROM Learning_ORM_queries_queryexps WHERE name = 'Dinesh'")
+
+    print("--------result--raw---------",result)
+
+    for r in result:
+        print("---r-----",r.name)
+
+    result = []
+    # result = LearnValidate.objects.raw("SELECT * FROM Learning_ORM_queries_learnvalidate WHERE name = 'Gopi'")
+ 
+    # ---rawsql -- pure sql --directly from database not django queryset
+
+    # 
+
     return render(re,"learning_orm_queries/index.html",{"q_exp":result})
 
 # --------------------------------------------------
@@ -1175,6 +1234,7 @@ def learn_condition_expression():
     result = [QueryExps.objects.get(pk=result)]
 
     print("------------re---",result)
+
 
     return result
     
