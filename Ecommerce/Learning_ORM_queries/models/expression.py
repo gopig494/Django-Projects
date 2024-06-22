@@ -24,3 +24,11 @@ class LearnDateDbFunc(models.Model):
 
     creation = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
+
+class DbMathFunc(models.Model):
+    int_value = models.IntegerField()
+    float_value = models.FloatField()
+    floor_no = models.IntegerField()
+    weight = models.FloatField()
+    description = models.TextField()
+    title = models.CharField(max_length=50)

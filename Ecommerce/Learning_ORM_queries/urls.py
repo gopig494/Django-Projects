@@ -33,6 +33,12 @@ urlpatterns = [
     path("learn_query_expressions/",learn_query_expressions),
     path("learn_expression_api/",learn_expression_api),
     path("learn_datetime_database_functions/",learn_datetime_database_functions),
+    path("learn_math_db_functions/",learn_math_db_functions),
+    path("learn_window_db_functions/",learn_window_db_functions),
+
+
+
+    
     
 ] 
 

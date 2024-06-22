@@ -88,6 +88,24 @@
 {% endif %}
 
 
+{% if db_math_fun %}
+<div style="display:flex;flex-direction:column;gap:0px">
+    {% for k in db_math_fun %}
+        <p>
+        {{k | safe}}
+        </p>
+        <p>
+            exe_f : {{k.exe_f}} <br><br>
+        </p>
+        <p>int_value : {{k.int_value}}</p>
+        <p>float_value : {{k.float_value}}</p>
+        <p>floor_no : {{k.floor_no}}</p>
+        <p>weight : {{k.weight}}</p>
+        <p>weight : {{k.description}}</p>
+        {% endfor %}
+</div>
+{% endif %}
+
 
 {% if q_exp %}
 <div style="display:flex;flex-direction:column;gap:0px">

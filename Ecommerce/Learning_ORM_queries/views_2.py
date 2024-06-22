@@ -1582,6 +1582,208 @@ def learn_datetime_database_functions(request):
 
     return render(request,"learning_orm_queries/index.html",{"db_date_fun":result})
 
+def learn_math_db_functions(request):
+
+    # thers is bunch of functions here for understanding inly dew fucntion used here 
+    # more functions like reverse,replace are avaiable , check the document
+
+    result = []
+
+    result = DbMathFunc.objects.all()
+
+    # 1 ------- Abs
+    # class Abs(expression, **extra)
+
+    from django.db.models.functions import Abs
+
+    from django.db.models import FloatField,IntegerField
+
+    FloatField.register_lookup(Abs)
+
+    IntegerField.register_lookup(Abs)
+
+
+    result = DbMathFunc.objects.annotate(exe_f = Abs("int_value"))
+
+    # here the negative int value first converted into positive then the value 0 wille be compared to the positive value
+
+    result = DbMathFunc.objects.filter(int_value__abs__gt = 0)
+
+    #2---------class Ceil(expression, **extra)
+
+    from django.db.models.functions import Ceil
+
+
+    FloatField.register_lookup(Ceil)
+
+    IntegerField.register_lookup(Ceil)
+
+
+    result = DbMathFunc.objects.annotate(exe_f = Ceil("float_value"))
+
+    result = DbMathFunc.objects.filter(float_value__ceil__gt = 0)
+
+
+    #3---------lass Floor(expression, **extra)
+
+    from django.db.models.functions import Floor
+
+
+    FloatField.register_lookup(Floor)
+
+    IntegerField.register_lookup(Floor)
+
+
+    result = DbMathFunc.objects.annotate(exe_f = Floor("float_value"))
+
+    result = DbMathFunc.objects.filter(float_value__floor__gt = 0)
+
+
+    #4--------------class Mod(expression1, expression2, **extra)
+    # modulo like in python 5%2
+
+    from django.db.models.functions import Mod
+
+
+    result = DbMathFunc.objects.annotate(exe_f = Mod("int_value","float_value"))
+
+    # $5---------------- lass Power(expression1, expression2, **extra)
+
+    from django.db.models.functions import Power
+
+
+    result = DbMathFunc.objects.annotate(exe_f = Power("int_value","floor_no"))  
+
+   
+    # 6--------------------class Random(**extra)
+
+    # Returns a random value in the range 0.0 ≤ x < 1.0.
+
+    from django.db.models.functions import Random
+
+
+    result = DbMathFunc.objects.annotate(exe_f = Random())  
+
+
+    # 7--------------------class Round(**extra)
+
+    # By default, it rounds to the nearest integer. 
+    
+    from django.db.models.functions import Round
+
+
+    result = DbMathFunc.objects.annotate(exe_f = Round("float_value"))
+
+    result = DbMathFunc.objects.annotate(exe_f = Round("float_value", precision = 2))  
+
+    # 8-------------class Sqrt(expression, **extra)
+
+    from django.db.models.functions import Sqrt
+
+    print('--------------------------------------------------------------------',chr(98))
+
+    result = DbMathFunc.objects.filter(floor_no=2).annotate(exe_f = Sqrt("floor_no"))
+
+    # 9--------------------------------class Chr(expression, **extra)
+
+    from django.db.models.functions import Chr
+
+    result = DbMathFunc.objects.filter(floor_no=2).annotate(exe_f = Chr(Value(98)))
+
+    # 10--------------------------------class Concat(*expressions, **extra
+
+    from django.db.models.functions import Concat
+
+    result = DbMathFunc.objects.annotate(exe_f = Concat(Value("floor_no"),Value("int_value")))
+
+   
+    #11------------------------class Left(expression, length, **extra)
+
+    # like slicing but the index will from 1 so if 2 means the first two values will be return
+
+    from django.db.models.functions import Left,Length,Lower
+
+    result = DbMathFunc.objects.annotate(exe_f = Left("description",length=2))
+
+    #12--------------class Length(expression, **extra)
+
+    # returns the length of the string
+
+    result = DbMathFunc.objects.annotate(exe_f = Length("description"))
+
+
+    result = DbMathFunc.objects.annotate(exe_f = Lower("description"))
+
+    #13----------------------SHA1, SHA224, SHA256, SHA384, and SHA512
+
+    # we need to install the pgcrypto extension on ##POSTGRESQL to perfom the hasing
+
+    # the above classes are different type hasing classes to hash the string
+
+    from django.db.models.functions import SHA1,SHA224,SHA256,SHA384,SHA512
+
+    result = DbMathFunc.objects.annotate(exe_f = SHA1("title"))
+
+    # 14-----------------------------lass StrIndex(string, substring, **extra)
+
+    from django.db.models.functions import StrIndex
+
+    # here we having the #Value as second argument as s
+
+    # do if the title field having 's' value means it will return the index
+
+    # important index is started from 1 not 0 like list
+
+    result = DbMathFunc.objects.annotate(exe_f = StrIndex("title",Value("s")))
+
+    # 15----------------------class Substr(expression, pos, length=None, **extra)
+
+    from django.db.models.functions import Substr
+
+    # it is used to slicing i.e index starting from 1
+
+    # here the title having value 'test' i gave the pos is 4 so the value return in the field is 't'
+
+    result = DbMathFunc.objects.annotate(exe_f = Substr("title",pos=4))
+
+    # here the 3rd args is '1' mention like after the '2' character hoe many character needs to be return
+
+    # so here title having 'test' and the start is 2 and length is 1 so the value will be 'e' only
+
+
+    result = DbMathFunc.objects.annotate(exe_f = Substr("title",2,1))
+
+    # if i give 2 it will return 'es'
+    
+    result = DbMathFunc.objects.annotate(exe_f = Substr("title",2,2))
+
+    # 16----------------class Trim(expression, **extra)
+
+    # trim is like python trim it will remove spaces form string
+
+    from django.db.models.functions import Trim
+
+    result = DbMathFunc.objects.annotate(exe_f = Trim("title"))
+
+
+    return render(request,"learning_orm_queries/index.html",{"db_math_fun":result})
+
+
+
+def learn_window_db_functions(request):
+
+    # refer the document 
+
+    # the functions are not much needed
+
+    result = []
+
+    result = DbMathFunc.objects.all()
+
+    return render(request,"learning_orm_queries/index.html",{"db_math_fun":result})
+
+
+
 
 
 def from_youtube(request):

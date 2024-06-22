@@ -35,6 +35,8 @@ admin.site.register(SearchKey)
 admin.site.register(QueryExps)
 admin.site.register(ExpLearn1)
 admin.site.register(LearnDateDbFunc)
+admin.site.register(DbMathFunc)
+
 
 
 
