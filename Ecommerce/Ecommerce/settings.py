@@ -43,8 +43,8 @@ INSTALLED_APPS = [
     "product_management",
     "customer",
     "rest_framework",
-    "Learning_ORM_queries",
-    # "Learning_ORM_queries.custom_models",
+    # "Learning_ORM_queries",
+    "Learning_ORM_queries.apps.LearningOrmQueriesConfig" 
 ]
 
 MIDDLEWARE = [
@@ -125,7 +125,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
 
 USE_I18N = True
 

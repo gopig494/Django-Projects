@@ -974,14 +974,6 @@ def learn_accent_unaccent():
 
     # print("----unaccent--1",unac)
 
-def learn_database_functions(re):
-
-    result = []
-
-
-
-    return render(re,"learning_orm_queries/index.html",{"db_fun":result})
-
 
 def learn_query_expressions(re):
 
@@ -1005,18 +997,18 @@ def learn_query_expressions(re):
 
     # if you want to increase the age of each record means how could you do normally like below
 
-    result = QueryExps.objects.all()
+    # result = QueryExps.objects.all()
 
-    for k in result:
-        d = QueryExps.objects.get(pk=k.id)
-        d.age = d.age + 1
-        d.save()
+    # for k in result:
+    #     d = QueryExps.objects.get(pk=k.id)
+    #     d.age = d.age + 1
+    #     d.save()
 
     # the above method is not correct , which mean if we have bulkk records it direct case to performance issue
 
     # intead of doing this the optimized way is #you cann understand the difference
 
-    result = QueryExps.objects.update(age = F("age") + 1)
+    # result = QueryExps.objects.update(age = F("age") + 1)
 
     # -------------avoid
 
@@ -1051,7 +1043,7 @@ def learn_query_expressions(re):
 
     # if it is false have to make it true like we can use like below
 
-    result = QueryExps.objects.update(verified = ~F("verified"))
+    # result = QueryExps.objects.update(verified = ~F("verified"))
 
    
     #---------------------- Upper
@@ -1155,19 +1147,165 @@ def learn_query_expressions(re):
     # : It returns a RawQuerySet instance, which behaves like a normal QuerySet but represents raw query results as model instances.
     # The columns selected in the raw SQL query must correspond to fields in the Django model. Django uses the model's _meta information to map columns to model fields.
     
-    result = QueryExps.objects.raw("SELECT * FROM Learning_ORM_queries_queryexps WHERE name = 'Dinesh'")
+    # for postgresql the table name shout be in -----""----double quote like below otherwise it shows does not exists erroor
+
+    result = QueryExps.objects.raw("""SELECT * FROM "Learning_ORM_queries_queryexps" """)
 
     print("--------result--raw---------",result)
 
     for r in result:
         print("---r-----",r.name)
 
-    result = []
-    # result = LearnValidate.objects.raw("SELECT * FROM Learning_ORM_queries_learnvalidate WHERE name = 'Gopi'")
  
     # ---rawsql -- pure sql --directly from database not django queryset
 
-    # 
+    # class RawSQL(sql, params, output_field=None)
+
+    from django.db.models.expressions import RawSQL
+
+    # params is mandatory to give it in the function
+
+    result = QueryExps.objects.annotate(exe_f = RawSQL(' SELECT name FROM "Learning_ORM_queries_queryexps" LIMIT 1',params = ["s"]))
+
+    result = QueryExps.objects.annotate(exe_f = RawSQL(' SELECT name FROM "Learning_ORM_queries_queryexps" WHERE name = %s ',params = ["Dinesh"]))
+
+    # ----window functions
+   
+    #class Window(expression, partition_by=None, order_by=None, frame=None, output_field=None)
+
+    # we can use aggerigate function to aggerigate the values but the problem is it will aggerigate all the rows
+
+    # but when use the window function we can define the partition like group by  but not exactly group by 
+
+    # to understand this see the exp below
+   
+    from django.db.models import Sum,Window,Avg,Min,Q
+
+    # in this example what is done means the sum of age is calculated only for the 'age' and 'name' fields values are same accross the all records
+
+
+    result = QueryExps.objects.annotate(exe_f = Window(
+                                expression = Sum("age"),
+                                partition_by = [F("age"),F("name")],
+                                order_by = "age"
+    ))
+    
+    # --multiple window use case
+
+    window = {
+         "partition_by":[F("age"),F("name")],
+          "order_by":"age"
+    }
+
+    result = QueryExps.objects.annotate(exe_f = Window(
+                                            expression = Sum("age"),
+                                            partition_by = [F("age"),F("name")],
+                                            order_by = "age"),
+                                exe_f_1 = Window(
+                                    expression = Avg("age"),
+                                    partition_by = [F("age"),F("name")],
+                                    order_by = "age"
+                                                    ),
+                                exe_f_2 = Window(
+                                    expression = Min("age"),**window)
+                                    
+                                    )
+   
+    # Rules
+    
+
+    result = QueryExps.objects.annotate(exe_f = Window(
+                                expression = Sum("age"),
+                                partition_by = [F("age"),F("name")],
+                                order_by = "age"
+    )).filter(exe_f__gt = 10)
+
+    result = QueryExps.objects.annotate(exe_f = Window(
+                                expression = Sum("age"),
+                                partition_by = [F("age"),F("name")],
+                                order_by = "age"
+    )).filter(Q(exe_f__gt = 10) | Q(name="Gopi"))
+
+    # query = """
+    #     SELECT *,
+    #            SUM(age) OVER (PARTITION BY age, name ORDER BY age ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS exe_f
+    #     FROM your_table_name
+    #     WHERE exe_f > 10 OR name = 'Gopi'
+    # """
+
+    # he reason for this limitation is that window functions are evaluated after the WHERE clause, so the database 
+    # can't use the window function results in the WHERE clause. This makes it difficult to implement filtering on 
+    # window functions with disjunctive predicates.
+
+    # >>> qs = Movie.objects.annotate(
+    # ...     category_rank=Window(Rank(), partition_by="category", order_by="-rating"),
+    # ...     scenes_count=Count("actors"),
+    # ... ).filter(Q(category_rank__lte=3) | Q(title__contains="Batman"))
+    
+    from django.db.models import RowRange,ValueRange
+
+    # ---------RowRange
+
+    result = QueryExps.objects.annotate(exe_f = Window(
+                                expression = Sum("age"),
+                                partition_by = [F("age"),F("name")],
+                                order_by = "age",
+                                frame=RowRange(start=-3,end=0)
+    )).filter(Q(exe_f__gt = 10) | Q(name="Gopi"))
+
+    # in this above examples
+
+    # if i have 5 records matching the partitiob means i.e group it will looking before 3 rows values and current row value to sum
+    # for examples if i have 5 rows having values 1000 on each,matching values
+    # my current row is 1st row so the result will be 1000 because of there is no previous rows avaiable 
+    # my current row is 2nd row so the result will be 2000 because of there is 1 row avaiable and current row
+    # i have menthond "start=-3" and "end=0" so on each row while SUM happening the SUM will include 
+    # current row and previous 3 rows only 
+    # start=-3 means previous 3 rows not current row included
+    # end=0 means include current row 
+
+    result = QueryExps.objects.annotate(exe_f = Window(
+                                expression = Sum("age"),
+                                partition_by = [F("verified")],
+                                order_by = "name",
+                                frame=RowRange(start=-3,end=0)
+    )).order_by("pk")
+
+    # -----class ValueRange(start=None, end=None)
+
+
+    # result = QueryExps.objects.annotate(exe_f = Window(
+    #                             expression = Sum("age"),
+    #                             partition_by = [F("verified")],
+    #                             order_by = "name",
+    #                             frame=ValueRange(start=-12,end=12)
+    # )).order_by("pk")
+
+    # If a movie’s “peers” are described as movies released by the same studio in the same genre in the same year, this RowRange example annotates each movie with the average rating of a movie’s two prior and two following peers:
+
+    # >>> from django.db.models import Avg, F, RowRange, Window
+    # >>> Movie.objects.annotate(
+    # ...     avg_rating=Window(
+    # ...         expression=Avg("rating"),
+    # ...         partition_by=[F("studio"), F("genre")],
+    # ...         order_by="released__year",
+    # ...         frame=RowRange(start=-2, end=2),
+    # ...     ),
+    # ... )
+
+    # If the database supports it, you can specify the start and end points based on values of an expression in the partition. If the released field of the Movie model stores the release month of each movie, this ValueRange example annotates each movie with the average rating of a movie’s peers released between twelve months before and twelve months after each movie:
+
+    # >>> from django.db.models import Avg, F, ValueRange, Window
+    # >>> Movie.objects.annotate(
+    # ...     avg_rating=Window(
+    # ...         expression=Avg("rating"),
+    # ...         partition_by=[F("studio"), F("genre")],
+    # ...         order_by="released__year",
+    # ...         frame=ValueRange(start=-12, end=12),
+    # ...     ),
+    # ... )
+
+
 
     return render(re,"learning_orm_queries/index.html",{"q_exp":result})
 
@@ -1227,11 +1365,11 @@ def learn_condition_expression():
     
     # -----use conditional expression in update
 
-    from django.db.models import IntegerField
+    # from django.db.models import IntegerField
     
-    result = QueryExps.objects.update(age = Case(When(name__icontains = "nesh",then=Value(1)),default = Value(1000),output_field=IntegerField()))
+    # result = QueryExps.objects.update(age = Case(When(name__icontains = "nesh",then=Value(1)),default = Value(1000),output_field=IntegerField()))
 
-    result = [QueryExps.objects.get(pk=result)]
+    # result = [QueryExps.objects.get(pk=result)]
 
     print("------------re---",result)
 
@@ -1239,3 +1377,227 @@ def learn_condition_expression():
     return result
     
 
+def learn_expression_api(request):
+    result = []
+
+    from django.db.models import Sum
+
+    result = ExpLearn1.objects.all()
+
+    return render(request,"learning_orm_queries/index.html",{"lea_exp":result})
+
+
+
+def learn_database_functions(re):
+    
+    result = []
+
+    #------Cast function
+
+    # class Cast(expression, output_field)
+
+    from django.db.models.functions import Cast
+    from django.db.models import FloatField
+
+
+    result = ExpLearn1.objects.annotate(exe_f = Cast(F("age"),output_field=FloatField()))
+
+    # ------ class Coalesce(*expressions, **extra)
+
+    # if we have two fields with similar datatype and want to fetch not null values by which is first list mentioned in coalesce
+
+    # like below if description having value it will be fetched if decription is null then name fetched
+
+    from django.db.models.functions import Coalesce
+
+    result = ExpLearn1.objects.annotate(exe_f = Coalesce("description","name"))
+
+    # what happedn when two or many of the fields having null values like below
+
+    # no error throw and none value will be returned
+
+    result = ExpLearn1.objects.annotate(exe_f = Coalesce("description","title"))
+
+    # if all fields having null means we can set a statisc value like below
+
+    esult = ExpLearn1.objects.annotate(exe_f = Coalesce("description","title",Value("ss")))
+
+    # Prevent an aggregate Sum() from returning None
+
+    from django.db.models import Sum
+
+    result = ExpLearn1.objects.annotate(exe_f = Coalesce(Sum("age"),0))
+
+    # --------------- class Collate(expression, collation)
+
+    # collate means it will ignore the databse case sensitiity 
+
+    # if i have a value in db like 'gopi' or 'Gopi' and the db is case sensitivity means we have give exact value like mentioned
+
+    # but when using like below it will filter both the values rows
+
+    # from django.db.models.functions import Collate
+
+    # result = ExpLearn1.objects.filter(name = Collate(Value("GOPI"),"nocase"))
+
+    # ----------- class Greatest(*expressions, **extra)
+
+    # the two or more comparsion fields must be same datatype
+
+    # if the two fields having null means the null will be returned
+
+    from django.db.models.functions import Greatest
+
+    result = ExpLearn1.objects.annotate(exe_f = Greatest("creation","modified"))
+
+    # handle null values and return default value
+
+    import datetime
+
+    from django.db.models.fields import DateTimeField
+
+    # here is the creation and modified null means the grestest value in default one so the default one will be return but this is not recommended way
+
+    result = ExpLearn1.objects.annotate(exe_f = Greatest("creation","modified",Value(datetime.datetime.now()),output_field=DateTimeField()))
+
+    # right way
+
+    result = ExpLearn1.objects.annotate(exe_f = Coalesce( Greatest("creation","modified"),Value(datetime.datetime.now()),output_field=DateTimeField()))
+
+    #---------------------class JSONObject(**fields)
+
+    # it will annottate a json in a single key to all the rows
+
+    from django.db.models.functions import JSONObject,Lower
+
+    result = ExpLearn1.objects.annotate(exe_f = JSONObject(name = "name",des = Lower("description"),age = F("age") + 1))
+
+
+    # ----------------class Least(*expressions, **extra)
+
+    from django.db.models.functions import Least
+
+    result = ExpLearn1.objects.annotate(exe_f = Least("creation","modified"))
+
+    # ------------class NullIf(expression1, expression2)
+
+    from django.db.models.functions import NullIf
+
+    # use case it get two or more field names and check weather all the fields are 'equal' if not then the first field value will be return
+
+    #if all field values equal then it will return 'null'
+
+    result = ExpLearn1.objects.annotate(exe_f = NullIf("creation","modified"))
+
+    return render(re,"learning_orm_queries/index.html",{"db_fun":result})
+
+def learn_datetime_database_functions(request):
+
+    result = []
+
+    result = LearnDateDbFunc.objects.all()
+
+    #  class Extract(expression, lookup_name=None, tzinfo=None, **extra)¶
+
+    # similar like below we can use hour,second,minute,week_day
+
+    result = LearnDateDbFunc.objects.filter(start_datetime__year = "2024")
+
+    result = LearnDateDbFunc.objects.filter(start_datetime__iso_year = "2024")
+
+    result = LearnDateDbFunc.objects.filter(start_datetime__quarter = 2)
+
+    result = LearnDateDbFunc.objects.filter(start_datetime__month = 6)
+
+    # filter itself working fine but how we can extracrt like year,day,month from a datetime,date field
+
+    from django.db.models.functions import Extract,ExtractDay,ExtractHour,ExtractMinute,ExtractMonth
+
+    result = LearnDateDbFunc.objects.filter(start_datetime__month= Extract("start_datetime","month"))
+
+    result = LearnDateDbFunc.objects.filter(start_datetime__month= ExtractMonth("start_datetime"))
+
+    # for querying purpose
+
+    result = LearnDateDbFunc.objects.annotate(exe_f = ExtractHour("start_datetime"))
+
+    # using different time zones
+
+    import zoneinfo
+    
+    melb = zoneinfo.ZoneInfo("Australia/Melbourne")
+
+    result = LearnDateDbFunc.objects.annotate(exe_f = ExtractHour("start_datetime",tzinfo=melb))
+
+    # -------- now function
+
+    from django.db.models.functions import Now
+
+    from django.db.models import DateTimeField,DateField
+
+
+    result = LearnDateDbFunc.objects.filter(start_datetime__lt=Now())
+
+    # --------------class Trunc(expression, kind, output_field=None, tzinfo=None, **extra)
+
+    from django.db.models.functions import Trunc
+
+    from django.db.models import Count
+
+    result = LearnDateDbFunc.objects.annotate(exe_f = Trunc("start_datetime",kind="day",output_field=DateTimeField())
+                                              ).values("exe_f").annotate(name = Count("id"))
+
+    # explanation
+
+    # in this below and above query exp the Trunc function is takes datetime field values
+
+    # and convert it into day means '22' and below in year means '2024'
+
+    # and match the values to all the records in db 
+
+    # the comparsion will be the 'start_datetime' having value of date and time but the comparsion is by 
+
+    # only date for above then below is year not datetime value comparsion
+
+
+    from django.db.models import IntegerField
+
+    result = LearnDateDbFunc.objects.annotate(exe_f = Trunc("start_datetime",kind="year",output_field=DateTimeField())
+                                              ).values("exe_f").annotate(name = Count("id"))
+
+    result = LearnDateDbFunc.objects.annotate(exe_f = Trunc("start_datetime",kind="year",output_field=DateTimeField())
+                                              ).values("exe_f")
+    
+    for r in result:
+        print("------------r",r)
+
+    result = LearnDateDbFunc.objects.annotate(exe_f = Trunc("start_datetime",kind="year",output_field=DateTimeField())
+                                              )
+    
+    # similar to extract and also we can add timezone like extract ref extract
+
+    from django.db.models.functions import TruncDate,TruncDay,TruncHour,TruncMinute
+
+    result = LearnDateDbFunc.objects.annotate(exe_f = TruncDate("start_datetime"))
+
+    return render(request,"learning_orm_queries/index.html",{"db_date_fun":result})
+
+
+
+def from_youtube(request):
+    pass
+    # 1
+    # cripsy_form
+    # honeypot
+    # default django login,register forms
+    # 404page not found in set in settiings.py
+
+    # 2
+    # templates - include
+    # namespace for routing use in python file
+    # use form name and send input val in get method to get the val in route  method
+    # back routing by using jinja result.meta.http.
+
+    # 3 
+    # login required decorator
+    # UsercreationForm() django default forms

@@ -49,22 +49,75 @@
         <p>
         {{k | safe}}
         </p>
+        <p>
+            exp====----------------- {{k.exe_f}}
+
+        </p>
+        <p>title - {{k.title}}</p>
+        <p>name - {{k.name}}</p>
+        <p>description - {{k.description}}</p>
+        <p>age - {{k.age}}</p>
+        <p>creation - {{k.creation}}</p>
+        <p>modified - {{k.modified}}</p>
         {% endfor %}
 </div>
 {% endif %}
+
+{% if db_date_fun %}
+<div style="display:flex;flex-direction:column;gap:0px">
+    {% for k in db_date_fun %}
+        <p>
+        {{k | safe}}
+        </p>
+        <p>
+            exe_f====----------------- {{k.exe_f}} <br><br>
+            name========-------name---------{{k.name}}
+
+        </p>
+        <p>sstart_datetime - {{k.start_datetime}}</p>
+        <p>start_date - {{k.start_date}}</p>
+        <p>start_time - {{k.start_time}}</p>
+        <p>end_datetime - {{k.end_datetime}}</p>
+        <p>end_date - {{k.end_date}}</p>
+        <p>end_time - {{k.end_time}}</p>
+        
+        <p>creation - {{k.creation}}</p>
+        <p>modified - {{k.modified}}</p>
+        {% endfor %}
+</div>
+{% endif %}
+
 
 
 {% if q_exp %}
 <div style="display:flex;flex-direction:column;gap:0px">
     {% for k in q_exp %}
         <ul>
+        <li>Pk --- {{k.pk}}</li>
         <li>{{k.name}}</li>
         <li>{{k.age}}</li>
         <li>{{k.nos}}</li>
         <li>{{k.description}}</li>
         <li>{{k.verified}}</li>
         {% if k.exe_f %}
-            {{k.exe_f}}
+            <li>--exe---{{k.exe_f}}</li>
+        {% endif %}
+        </ul>
+        {% endfor %}
+</div>
+{% endif %}
+
+
+
+{% if lea_exp %}
+<div style="display:flex;flex-direction:column;gap:0px">
+    {% for k in lea_exp %}
+        <ul>
+        <li>Pk --- {{k.pk}}</li>
+        <li>{{k.name}}</li>
+        <li>{{k.age}}</li>
+        {% if k.exe_f %}
+            <li>--exe---{{k.exe_f}}</li>
         {% endif %}
         </ul>
         {% endfor %}

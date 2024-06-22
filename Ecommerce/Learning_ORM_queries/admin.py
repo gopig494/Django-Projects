@@ -33,6 +33,10 @@ admin.site.register(ChildProx)
 admin.site.register(Rating)
 admin.site.register(SearchKey)
 admin.site.register(QueryExps)
+admin.site.register(ExpLearn1)
+admin.site.register(LearnDateDbFunc)
+
+
 
 
 
