@@ -96,7 +96,7 @@ DATABASES = {
         'HOST': '127.0.0.1',
         'PORT': '5432',
 
-        'AUTOCOMMIT': False, #the admin records also not be saved or deleted because of suto commit false
+        # 'AUTOCOMMIT': False, #the admin records also not be saved or deleted because of suto commit false
     }
 }   
 

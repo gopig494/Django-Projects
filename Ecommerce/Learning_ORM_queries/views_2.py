@@ -1974,7 +1974,7 @@ def learn_database_transac_2():
         transaction.set_rollback(True)
         raise
 
-def learn_auto_commit_savepoint(request):
+def learn_auto_commit(request):
 
     result = []
 
@@ -2064,6 +2064,8 @@ def learn_auto_commit_savepoint(request):
     # Passing robust=True can be useful in scenarios where you want to ensure that all callbacks are executed, 
     # even if one of them fails. This can help prevent cascading failures and ensure that your application remains in a consistent state.
 
+    # If one on-commit function registered with robust=False within a given transaction raises an uncaught exception, no later registered functions in that same transaction will run
+
     def robust_test(args):
         raise ValidationError
 
@@ -2071,6 +2073,107 @@ def learn_auto_commit_savepoint(request):
 
     transaction.on_commit(partial(send_email,args="robust working"),robust=True)
 
+    return render(request,"learning_orm_queries/index.html",{"db_trans":result})
+
+
+def learn_save_point(request):
+
+    result = []
+
+    #1---------outer transaction // inner transaction
+
+    from django.db import transaction
+    from functools import partial
+
+    def call(c):
+        print("----call----",c)
+
+    # here the two on_commit events will be called
+
+    with transaction.atomic(): #outer transaction #start a new transaction 
+        transaction.on_commit(partial(call,c = "outer transaction"))
+        with transaction.atomic(): #inner transaction #create a savepoint
+            transaction.on_commit(partial(call,c = "inner transaction"))
+
+    # here the no commit events will be called because the on_commit will be called after leaving the atomic block
+    
+    # but here even the outer atomic block has no error but inside atomic having error so the two callback functions will not be happen
+
+    # with transaction.atomic(): #outer transaction #start a new transaction 
+    #     transaction.on_commit(partial(call,c = "outer transaction"))
+    #     with transaction.atomic(): #inner transaction #create a savepoint
+    #         transaction.on_commit(partial(call,c = "inner transaction"))
+    #         raise Exception("Exception rised")
+        
+    #if i handle the error the outer block event and inner block evnet also will be called
+
+    # Your callbacks are executed after a successful commit, so a failure in a callback will not cause the transaction to roll back.
+
+    with transaction.atomic(): #outer transaction #start a new transaction 
+        transaction.on_commit(partial(call,c = "outer transaction"))
+        with transaction.atomic(): #inner transaction #create a savepoint
+            try:
+                transaction.on_commit(partial(call,c = "inner transaction"))
+                raise Exception("Exception rised")
+            except Exception:
+                pass
+    # On-commit functions only work with autocommit mode and the atomic() (or ATOMIC_REQUESTS) transaction API. Calling on_commit() when autocommit is disabled and you are not within an atomic block will result in an error.
+
+
+    ##-2--------------Order of execution¶
+    # On-commit functions for a given transaction are executed in the order they were registered.
+
+    #3----------------get auto commit enabled or not
+
+
+    transaction_status = transaction.get_autocommit() #it will take using as args which is a db name , if not given default db will be taken
+
+    print("----------trans status---",transaction_status)
+
+    #4----------we can explicitly set auto commit fales or true using
+
+    transaction.set_autocommit(False) #it will take using as args which is a db name , if not given default db will be taken
+
+    # one auto commit turned of we can use func to commit or rollback
+
+    transaction.commit()
+
+    transaction.rollback()
+
+    # we can manually create save points to rollback
+
+    sid = transaction.savepoint() #it will return sid by using this we can rollback the transactions
+
+    print("--------sid----------------",sid)
+
+    transaction.rollback(sid)
+
+    # we can also use commit
+
+    transaction.commit(sid)
+
+    # clear all the save points
+
+    transaction.clean_savepoints()
+
+    # Savepoints may be used to recover from a database error by performing a partial rollback. If you’re doing this inside an atomic() block, the entire block will still be rolled back, because it doesn’t know you’ve handled the situation at a lower level! 
+    # To prevent this, you can control the rollback behavior with the following functions.
+
+    transaction.get_rollback()
+
+
+    # get_rollback(using=None)¶
+
+    # set_rollback(rollback, using=None)¶
+
+    # Setting the rollback flag to True forces a rollback when exiting the innermost atomic block. This may be useful to trigger a rollback without raising an exception.
+
+    # Setting it to False prevents such a rollback. Before doing that, make sure you’ve rolled back the transaction to a known-good savepoint within the current atomic block! Otherwise you’re breaking atomicity and data corruption may occur.
+
+    transaction.savepoint_commit(sid)
+
+    transaction.savepoint_rollback(sid)
+    
     return render(request,"learning_orm_queries/index.html",{"db_trans":result})
 
 
