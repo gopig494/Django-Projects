@@ -32,3 +32,18 @@ class DbMathFunc(models.Model):
     weight = models.FloatField()
     description = models.TextField()
     title = models.CharField(max_length=50)
+
+class DBTransactions(models.Model):
+    title = models.CharField(max_length=10)
+    description = models.TextField()
+    rating = models.IntegerField()
+
+    def __str__(self):
+        return f"{self.title} --> {self.rating}"
+    
+    # def delete(self,*args, **kwargs):
+    #     res = super().delete(*args, **kwargs)
+    #     from django.db import transaction
+    #     transaction.commit()
+    #     return res
+    

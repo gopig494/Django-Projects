@@ -95,6 +95,8 @@ DATABASES = {
         'PASSWORD': 'msi@root',
         'HOST': '127.0.0.1',
         'PORT': '5432',
+
+        'AUTOCOMMIT': False, #the admin records also not be saved or deleted because of suto commit false
     }
 }   
 
@@ -151,3 +153,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR,'media')
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+#   1 -----------learn atomic requests
+
+# ATOMIC_REQUESTS = True
+
+# When you set ATOMIC_REQUESTS = True in your Django project's settings.py file, 
+# it enables atomic requests for the entire project. This means that each request is wrapped in a database 
+# transaction, and if any database error occurs during the request, the entire transaction is rolled back.

@@ -35,11 +35,9 @@ urlpatterns = [
     path("learn_datetime_database_functions/",learn_datetime_database_functions),
     path("learn_math_db_functions/",learn_math_db_functions),
     path("learn_window_db_functions/",learn_window_db_functions),
-
-
-
-    
-    
+    path("learn_custom_managers/",learn_custom_managers),
+    path("learn_database_transactions/",learn_database_transactions),
+    path("learn_auto_commit_savepoint/",learn_auto_commit_savepoint),
 ] 
 
 

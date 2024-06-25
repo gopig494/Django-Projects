@@ -36,6 +36,12 @@ def learn_meta(request):
     # the create method is overrided and index error message is ride so we can modify as per our needs
     # manager = LearnMeta.custom_manager.create(name = "Gopi",age=16)
 
+    # ****************** ref document
+
+    # by default the RelatedManager used for reverse relations is a subclass of the default manager for that model. If you would like to specify a different manager for a given query you can use the following syntax:
+    
+    # b.entry_set(manager="entries").all()
+
     return render(request,"learning_orm_queries/index.html",{"meta":all})
 
 
@@ -1776,6 +1782,8 @@ def learn_window_db_functions(request):
 
     # the functions are not much needed
 
+    # RowNumber.\,Rank,PercentRank,Ntile,NthValue,Lead¶,LastValue,Lag,FirstValue,DenseRank,CumeDist
+
     result = []
 
     result = DbMathFunc.objects.all()
@@ -1783,7 +1791,287 @@ def learn_window_db_functions(request):
     return render(request,"learning_orm_queries/index.html",{"db_math_fun":result})
 
 
+def learn_custom_managers(request):
 
+    # refer the document 
+
+    # the functions are not much needed
+
+    # RowNumber.\,Rank,PercentRank,Ntile,NthValue,Lead¶,LastValue,Lag,FirstValue,DenseRank,CumeDist
+
+    result = []
+
+    result = LearnManager.my_manager.all()
+
+    # A custom Manager method can return anything you want. It doesn’t have to return a QuerySet.
+
+    # Another thing to note is that Manager methods can access self.model to get the model class to which they’re attached.
+
+    result = LearnManager.cust_manager_1.get_title_value() #this is the custom manager method
+
+    # result = LearnManager.objects.all()
+    
+    # accessing related objects 
+
+    # By default, Django uses an instance of the Model._base_manager manager class when accessing related objects 
+    # (i.e. choice.question), not the _default_manager on the related object. #the default manager is 'objects'
+
+    result = ManagerDetail.objects.all() #it apply the manager fileter and fetch the data
+
+    result = LearnManager.my_manager.all()
+
+    for re in result:
+        print("---re",re.manager_detail)
+
+    # result = [LearnManager.my_manager.get(pk=1)]
+
+
+    # for re in result:
+    #     print("---basemanager----------",re.manager_detail)
+
+    # 2------------------custom queryset 
+
+    # here the high_rated is custom queryset see models.py to more details
+
+    result = LearnManager.cust_manager_1.hight_rated()
+
+    # 3----------manager with queryset
+
+    # this is the public method so that can beaccessed by both queryset and custom manager like below
+
+    result = LearnManager.cust_manager_2.hight_rated()
+
+    result = CustomManager2_WithQueryset(LearnManager).hight_rated()
+
+
+    # trying to access private method
+
+    # in this case the manage can't be access the private method like below first method
+
+    # result = LearnManager.cust_manager_2._low_rated()
+
+    result = CustomManager2_WithQueryset(LearnManager)._low_rated()
+
+    # the method _most_valuable is set to queryset_only is fasle so we can access the method by manager even it private method
+
+    result = LearnManager.cust_manager_2._most_valuable()
+
+    result = CustomManager2_WithQueryset(LearnManager)._most_valuable()
+
+    # 4--------------------classmethod from_queryset(queryset_class)
+
+    result = LearnManager.cust_manager_3.hight_rated()
+
+    # 5--------------using inherited model to test parent manager
+
+    result = ChildLearnManager.my_manager.all()
+
+    result = ChildLearnManager.cust_manager_3.hight_rated()
+
+    result = ChildLearnManager.child_manager.all()
+
+    return render(request,"learning_orm_queries/index.html",{"manager_fun":result})
+
+from django.db import transaction
+# transaction.atomic(using=None, savepoint=True, durable=False)#using is the name of the database
+# @transaction.non_atomic_requests #the decorator which is used to disble the atomic transaction nature to the particular request , which is used when we use atomic_request = true enables in settings.py ,which mean all the http request will be atomic requests.
+# @transaction.atomic #if the decorator is used even the auto commit enbles the trasaction wont be auto commited which means below the two queries eill be rollback if any error rises
+def learn_database_transactions(request):
+
+    result = []
+
+    #1-------------- by default the django usess auto commit for each transaction
+
+    # query1 = DBTransactions()
+    # query1.title = "trans 3"
+    # query1.description = "descript 3"
+    # query1.rating = 3
+    # query1.save()
+
+
+    # query2 = DBTransactions()
+    # query2.title = "trans 4wsrfsas" #here title is max chr is 10 but i gave more than 10
+    # query2.description = "descript 4"
+    # query2.rating = "4" 
+    # query2.save()
+
+    # In the above example, each query is executed in its own transaction. If Query 2 fails, the database will roll back 
+    # only Query 2, and the changes made by Query 1 (creating the user) will be committed.
+
+    # 2------------------- atomic request = true in settings.py so every query in the view is consider as a single query
+    # so the one of the query failes all the query transaction will be rollback
+    # in the above the query1 is one transaction and autocommited and another is separate so the one query executed and
+    # auto commited to db so one recired will be avaioable to overcome this below func example is used
+
+    # i have enbled the atomic request = True in settings.py but still the first query will br commited to the database
+    # because the ORM having auto commit = True so the first query won't be rollback evan atomic enables
+    # the second query having errors
+
+    query1 = DBTransactions()
+    query1.title = "trans 5"
+    query1.description = "descript 5"
+    query1.rating = 5
+    query1.save()
+
+
+    query2 = DBTransactions()
+    query2.title = "trans 6wsrfsas" #here title is max chr is 10 but i gave more than 10
+    query2.description = "descript 6"
+    query2.rating = "6" 
+    query2.save()
+
+    # To overcome the above scnario the below method is used    
+
+    # learn_database_transac_1()
+
+    # the another method to rollback the trnsactions
+
+    learn_database_transac_2()
+
+    return render(request,"learning_orm_queries/index.html",{"db_trans":result})
+
+def learn_database_transac_1():
+    from django.db import transaction
+
+    # here we have two transaction but when we use transaction.atomic it will be consider as a single transaction
+
+    # so if any one of these failes the two transactions will be rollbacked
+
+    with transaction.atomic():
+
+        query1 = DBTransactions()
+        query1.title = "trans 7"
+        query1.description = "descript 7"
+        query1.rating = 7
+        query1.save()
+
+
+        query2 = DBTransactions()
+        query2.title = "trans 6wsrfsas" #here title is max chr is 10 but i gave more than 10
+        query2.description = "descript 8"
+        query2.rating = "8" 
+        query2.save()
+
+    # In order to guarantee atomicity, atomic disables some APIs. Attempting to commit, roll back, or change the 
+    # autocommit state of the database connection within an atomic block will raise an exception
+
+
+def learn_database_transac_2():
+    from django.db import transaction
+
+    # so if any one of these failes the two transactions will be rollbacked
+
+    # this is not correct method,by default the transaction will be rollback
+    # but some case it will be useful
+
+    try:
+        query2 = DBTransactions()
+        query2.title = "trans 6wsrfsas" #here title is max chr is 10 but i gave more than 10
+        query2.description = "descript 10"
+        query2.rating = "10" 
+        query2.save()
+    except ValidationError:
+        transaction.set_rollback(True)
+        raise
+
+def learn_auto_commit_savepoint(request):
+
+    result = []
+
+    # #################33 in the settings.py the auto commit is set to false sono commit happend
+
+    # In the SQL standards, each SQL query starts a transaction, unless one is already active. 
+    # Such transactions must then be explicitly committed or rolled back
+
+    # from django.db import transaction
+
+    # # Disable auto-commit
+    # transaction.set_autocommit(False)
+
+    # try:
+    #     # Your database operations here
+    #     transaction.commit()  # Commit the transaction
+    # except:
+    #     transaction.rollback()  # Rollback the transaction if an error occurs
+    # finally:
+    #     transaction.set_autocommit(True)  # Restore auto-commit behavior
+
+    # 1-------------autp commit is false in the setting.py
+
+    # here the two transaction will be rollback if error rise and two transaction will be commited when use commit only
+    # other wise the record not commited to databse.
+
+    from django.db import transaction
+
+    try:
+        query1 = DBTransactions()
+        query1.title = "trans 11"
+        query1.description = "descript 11"
+        query1.rating = 11
+        query1.save()
+
+
+        query2 = DBTransactions()
+        query2.title = "trans 6wsrfsas" #here title is max chr is 10 but i gave more than 10
+        query2.description = "descript 11"
+        query2.rating = "11" 
+        query2.save()
+
+        transaction.commit()
+
+    except Exception:
+        transaction.rollback()
+    
+    # 2 #--------------- after the record saved some times we  have to do some actions like email sending for that below function used
+
+    # this is the manual transaction beecause of auto commit is fales in settings
+
+    # However, when you're using manual transaction management (i.e., you've disabled autocommit and are managing t
+    # ransactions explicitly using transaction.set_autocommit(False) or @transaction.atomic), you can't use on_commit().
+    
+    # The reason is that on_commit() relies on Django's automatic transaction management to work correctly. When you're using manual transaction management,
+    #  you're taking control of the transaction lifecycle, and on_commit() can't guarantee that the callback will be executed at the correct time.
+
+    # due to manual transaction management the on_commit not worked and error will rise
+
+    # to avoid this turn on the auto commit for this particular block then we can use the 'on_commit'
+
+    transaction.set_autocommit(True)
+    
+    def send_email(args = None):
+        print("---------send email called----------------",args)
+
+    query1 = DBTransactions()
+    query1.title = "trans 11"
+    query1.description = "descript 11"
+    query1.rating = 11
+    query1.save()
+    # transaction.commit()
+    # transaction.on_commit(send_email)
+
+    # Callbacks will not be passed any arguments, but you can bind them with functools.partial():
+
+    from functools import partial
+    
+    transaction.on_commit(partial(send_email,args="working"))
+
+    # 2------------f you call on_commit() while there isn’t an open transaction, the callback will be executed immediately.
+
+    transaction.on_commit(partial(send_email,args="working"))
+
+    # 3----------------------- robust=True
+
+    # Passing robust=True can be useful in scenarios where you want to ensure that all callbacks are executed, 
+    # even if one of them fails. This can help prevent cascading failures and ensure that your application remains in a consistent state.
+
+    def robust_test(args):
+        raise ValidationError
+
+    transaction.on_commit(partial(robust_test,args="robust working"),robust=True)
+
+    transaction.on_commit(partial(send_email,args="robust working"),robust=True)
+
+    return render(request,"learning_orm_queries/index.html",{"db_trans":result})
 
 
 def from_youtube(request):
@@ -1803,3 +2091,7 @@ def from_youtube(request):
     # 3 
     # login required decorator
     # UsercreationForm() django default forms
+
+    #4
+    # timesince pip use in inside the templating in html file like {{creation  | timesince}} it will give result like 3 min ago
+

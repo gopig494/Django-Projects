@@ -36,6 +36,14 @@ admin.site.register(QueryExps)
 admin.site.register(ExpLearn1)
 admin.site.register(LearnDateDbFunc)
 admin.site.register(DbMathFunc)
+admin.site.register(LearnManager)
+admin.site.register(ManagerDetail)
+admin.site.register(ChildLearnManager)
+admin.site.register(DBTransactions)
+
+
+
+
 
 
 

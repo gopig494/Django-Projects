@@ -122,6 +122,8 @@ class AbstractCar(models.Model):
 class Car(AbstractCar):
     colour = models.CharField(max_length=40)
 
+# --------------------- 1 custom managers 
+
 class CustomManager(models.Manager):
     def get_data(self):
         print("-------self.all",self.all())
@@ -174,6 +176,8 @@ class LearnMeta(models.Model):
         # the table will be created under customer app like customer_learnmeta
         # app_label = "customer"
         # by default the `object` manager is used we can change the name by using below attr
+
+        #  when accessing related objects (e.g., choice.question), Django uses a special manager called Model._base_manager.
         base_manager_name = "custom_manager"
 
         # we can change the table name 
@@ -824,3 +828,193 @@ class BookReview(Book, Article):
 
 # class BookReview(Book, Article):
 #     pass
+
+
+# @-------------------2 lean about managers -- from manager docs
+
+class ManagerDetailManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(age__gt = 10)
+        # return super().get_queryset()
+
+class ManagerDetailBaseManager(models.Manager):
+    def get_queryset(self):
+        # return super().get_queryset().filter(age__gt = 0)
+        return super().get_queryset()
+
+
+class ManagerDetail(models.Model):
+
+    name = models.CharField(max_length=100)
+    age = models.IntegerField()
+
+    objects = ManagerDetailManager()
+
+    base_manager = ManagerDetailBaseManager()
+
+    # if i try to fetch the manager detail the filter of the custom manager will apply 
+
+    # below i used the model has a forign key so there the custom manager filter not applied.
+
+    class Meta:
+        #  when accessing related objects (e.g., choice.question), Django uses a special manager called Model._base_manager.
+       
+        #  so when i trying to use this query
+
+        #  result = LearnManager.my_manager.all()
+
+        # for re in result:
+        #     print("---re",re.manager_detail)
+
+        # in the loop statment the base manager is used instead on default manager 
+
+        # the table is used in another table as forign key so when we access from that table we don't need our custom --
+
+        # -- manager filter to filter our records or we need separate filter that a case to use the base_manager
+
+        # if we not defind any of base manager django use the default base manager and which does not having any fielters
+
+        # so all the records will be fetched with out applying filter
+
+        # if we want apply the filter even when we query from another model which ahs the table has a forign key
+
+        # we need to defins the base manager and defind the filter which is as per our requirement or same as default manager filter
+
+        # by default in the admin pannel itseld for related fields the default manager filter will applied
+
+        base_manager_name = "base_manager"
+
+        pass
+
+        # The base manager (ManagerDetailBaseManager) is only used when you explicitly access it, such as:
+
+        # python
+
+        # related_model = RelatedModel.objects.get(id=1)
+
+        # manager_detail = related_model.manager_detail  # uses default manager (ManagerDetailManager)
+
+        # manager_detail_base = ManagerDetail.base_manager.get(id=1)  # uses base manager (ManagerDetailBaseManager)
+
+        # So, to summarize:
+
+        #     The default manager (objects) is used by the Django admin site to retrieve objects.
+        #     The base manager (base_manager) is only used when explicitly accessed, and not by the Django admin site.
+
+        # Thanks for pointing out this important distinction
+
+class LearnManagerQueryset(models.QuerySet):
+    def hight_rated(self):
+        return self.filter(floor_no__gt = 1)
+
+class CustomManager1(models.Manager):
+
+    # when using this custom method for each row in the wuery set it will be executed
+
+    # so the set of result of each records having field name 'exe_f' with value of concat
+
+    def get_title_value(self):
+        from django.db.models import F,Value
+        from django.db.models.functions import Concat
+        return self.annotate(exe_f = Concat(F("name"),Value(" --- "),F("title")))
+    
+    # modifying managers initial queryset
+
+    # You can override a Manager’s base QuerySet by overriding the Manager.get_queryset() method. get_queryset() should return a QuerySet with the properties you require.
+    
+    def get_queryset(self) -> models.QuerySet:
+
+        # we add filter and exclude in it
+
+        # return super().get_queryset().filter(floor_no__gt = 10)
+
+        # return super().get_queryset().exclude(floor_no__gt = 1000)
+
+        return LearnManagerQueryset(self.model,using = self._db)
+
+    # we can add different managers and common filters which is repeat again & again so we don't need to write a code again and again
+
+    def hight_rated(self):
+        return self.get_queryset().hight_rated()
+
+class CustomManager2_WithQueryset(models.QuerySet):
+    # public method we can access throw the manager
+    def hight_rated(self):
+        return self.filter(floor_no__gt = 1)
+    
+    # private method can't be access throw the manager
+    # Available only on QuerySet.
+    def _low_rated(self):
+        return self.filter(floor_no__lt = 50)
+    
+    # Methods with a queryset_only attribute set to False are always copied.
+    
+    def _most_valuable(self):
+        return self.filter(floor_no__lt = 50)
+    
+    _most_valuable.queryset_only = False
+    
+    # Methods with a queryset_only attribute set to True are never copied.
+
+    def most_invaluable(self):
+        return self.filter(floor_no__lt = 50)
+    
+    most_invaluable.queryset_only = True
+
+
+class LearnManager(models.Model):
+    title = models.CharField(max_length=50)
+    name = models.CharField(max_length=100)
+    int_value = models.IntegerField()
+    floor_no = models.IntegerField()
+    manager_detail = models.ForeignKey(ManagerDetail,on_delete=models.CASCADE,blank=True,null=True)
+
+    # for 'top-level' customizations only the manager override or custom manager is used
+
+    # for 'lo-level' or small customization the new class method or class method overridding is used
+
+    # to override the default manager name like
+
+    # the default manager for every class is 'objects' , the below code is overridding the 'objects' below example is used
+
+    #in this model we can't use the 'objects' as manager instead of we can use 'my_manager'  
+
+    my_manager = models.Manager()
+
+    cust_manager_1 = CustomManager1()
+
+    cust_manager_2 = CustomManager2_WithQueryset().as_manager()
+
+    # another way to create queryset and manager
+
+    cust_manager_3 = CustomManager1().from_queryset(LearnManagerQueryset)()
+
+    #  when accessing related objects (e.g., choice.question), Django uses a special manager called Model._base_manager.
+
+    # The reason for having a separate Model._base_manager is to ensure that Django can retrieve related objects even if they would be filtered out by the default manager.
+
+
+    def __str__(self):
+        return f"{self.title} --> {self.name}"
+    
+    # class Meta:
+    #     default_manager_name = CustomManager1()
+    
+
+class ChildLearnManager(LearnManager):
+    child_name = models.CharField(max_length=100)
+
+    child_manager = models.Manager()
+
+
+    # Implementation concerns¶
+
+    # Whatever features you add to your custom Manager, it must be possible to make a shallow copy of a Manager instance; i.e., the following code must work:
+
+    # >>> import copy
+    # >>> manager = MyManager()
+    # >>> my_copy = copy.copy(manager)
+
+    # Django makes shallow copies of manager objects during certain queries; if your Manager cannot be copied, those queries will fail.
+
+    # This won’t be an issue for most custom managers. If you are just adding simple methods to your Manager, it is unlikely that you will inadvertently make instances of your Manager uncopyable. However, if you’re overriding __getattr__ or some other private method of your Manager object that controls object state, you should ensure that you don’t affect the ability of your Manager to be copied.

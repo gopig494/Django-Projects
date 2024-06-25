@@ -107,6 +107,43 @@
 {% endif %}
 
 
+{% if manager_fun %}
+<div style="display:flex;flex-direction:column;gap:0px">
+    {% for k in manager_fun %}
+        <p>
+        {{k | safe}}
+        </p>
+        <p>
+            exe_f : {{k.exe_f}} <br><br>
+        </p>
+        <p>name : {{k.name}}</p>
+        <p>title : {{k.title}}</p>
+        <p>int_value : {{k.int_value}}</p>
+        <p>floor_no : {{k.floor_no}}</p>
+        {% endfor %}
+</div>
+{% endif %}
+
+
+{% if db_trans %}
+<div style="display:flex;flex-direction:column;gap:0px">
+    {% for k in db_trans %}
+        <p>
+        {{k | safe}}
+        </p>
+        <p>
+            exe_f : {{k.exe_f}} <br><br>
+        </p>
+        <p>name : {{k.name}}</p>
+        <p>title : {{k.title}}</p>
+        <p>int_value : {{k.int_value}}</p>
+        <p>floor_no : {{k.floor_no}}</p>
+        {% endfor %}
+</div>
+{% endif %}
+
+
+
 {% if q_exp %}
 <div style="display:flex;flex-direction:column;gap:0px">
     {% for k in q_exp %}
