@@ -208,7 +208,7 @@ class FieldTypesCheckL2(models.Model):
     fip_ad = models.GenericIPAddressField(verbose_name="FIP Address",null=True)
     file_stor = models.FileField(upload_to=file_storage)
     file_path = models.FilePathField(path=get_file_path,recursive=True,allow_files = True,allow_folders=True)
-    gen_field = models.GeneratedField(expression = F("file_path"),output_field = models.FilePathField(),db_persist = True)
+    # gen_field = models.GeneratedField(expression = F("file_path"),output_field = models.FilePathField(),db_persist = True)
     # @staticmethod
     # def validate_1(obj):
     #     if not obj.pub_date == datetime.datetime.today():

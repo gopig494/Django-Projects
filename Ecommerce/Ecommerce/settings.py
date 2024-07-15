@@ -83,12 +83,15 @@ WSGI_APPLICATION = 'Ecommerce.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+print("--------bae dir-------",BASE_DIR)
+
 DATABASES = {
+    'sql_lite_db': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    },
+    'postgresql_db': {
     # 'default': {
-    #     'ENGINE': 'django.db.backends.sqlite3',
-    #     'NAME': BASE_DIR / 'db.sqlite3',
-    # },
-    'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'django_learning',
         'USER': 'gopi',
@@ -97,8 +100,31 @@ DATABASES = {
         'PORT': '5432',
 
         # 'AUTOCOMMIT': False, #the admin records also not be saved or deleted because of suto commit false
-    }
+    },
+    # we don't need to specify the default database config but atleast we have specify empty dictionary like below
+    "default":{} #if we don't want to make any database default this will be useful
 }   
+
+# settings.py
+
+# we can define multiple path classes to achive our requirements
+
+# here is the first list class is having priority which means the first path is working
+
+# if first path return none means it will go to send path
+
+# Django also provides an API that allows you to maintain complete control over database usage in your code. A manually(using while query) specified database allocation will take priority over a database allocated by a router.
+
+# DATABASE_ROUTERS = ['Learning_ORM_queries.db_routers.routers.MyRouter','Learning_ORM_queries.db_routers.routers.MyRouterCopy']
+
+DATABASE_ROUTERS = ['Learning_ORM_queries.db_routers.routers.MyRouter_3']
+
+
+
+
+
+
+
 
 # /var/lib/postgresql/16/main
 

@@ -1,0 +1,45 @@
+{% extends "ecommerce_app/base/base.html" %}
+{% load static %}
+{% block title %}
+    <title>Mega Sale</title>
+ {% endblock %}
+{% block static_css %}
+   {% comment %} <link rel="stylesheet" href="{% static 'ecommerce_app/templates/ecommerce_app/pages/index/index.css' %}" type="text/css"> {% endcomment %}
+   <link rel="stylesheet" href="{% static 'ecommerce_app/css/index.css' %}" type="text/css">
+{% endblock %}
+
+{% block content %}
+
+
+    {% if data %}
+        <div class="product-list-container">
+            {% for pr in data%}
+                <div class="each-product">
+                    <img src="{{pr.product_image.url}}" alt="no-img">
+                    <p>{{pr.product_name}}</p>
+                    <p>{{pr.price}}</p>
+                    <p>{{pr.old_price}}</p>
+                    <p>{{pr.description}}</p>
+                    {% if pr.cart_qty %}
+                    <form method="POST" action="/ecommerce/add_cart_byid/{{pr.cart_id}}">
+                        {%csrf_token %} 
+                            <button type="submit">add</button>
+                    </form>
+                    <button onclick="delete_cart({{pr.cart_qty}},{{pr.cart_id}},{{auth}})">-</button>
+                    <span>{{pr.cart_qty}}</span>
+                    <button onclick="update_cart({{pr.cart_qty}},{{pr.cart_id}},{{auth}})">+</button>
+                    {% else %}
+                        <button id='{{pr.id}}' onclick="add_to_cart((event),'{{pr.id}}','{{pr.product_name}}','{{pr.product_image.url}}',{{pr.price}},{{pr.old_price}},{{auth}})">Add to cart</button>
+                    {% endif %}
+                </div>
+            
+            {% endfor %}
+        </div>
+    {% else %}
+
+        <p>No products found</p>
+
+    {% endif %}
+
+
+ {% endblock %}

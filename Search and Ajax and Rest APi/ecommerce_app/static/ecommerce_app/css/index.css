@@ -1,0 +1,33 @@
+p{
+    color:blue;
+}
+
+ul{
+    display: flex;
+    justify-content: space-evenly;
+    list-style: none;
+    align-items: center;
+    height: 39px;
+    background: #c4c3c3;
+}
+
+li{
+
+    text-decoration: none;
+}
+
+img{
+    height: 80px;
+}
+
+.product-list-container{
+    display: flex;
+    gap: 30px;
+}
+
+.each-product{
+    padding: 5px;
+    border: 1px solid gainsboro;
+    border-radius: 5px;
+    text-align: center;
+}

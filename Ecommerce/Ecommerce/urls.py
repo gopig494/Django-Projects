@@ -21,9 +21,11 @@ from customer import urls as CUST_urls
 from Learning_ORM_queries import urls as ORM_urls
 from django.conf import settings
 from django.conf.urls.static import static
+from customer.admin import othersite
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('othersite/', othersite.urls),
     path("",include(PM_urls)),
     path("customer/",include(CUST_urls)),
     path("orm/",include(ORM_urls)),

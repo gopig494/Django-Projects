@@ -4,8 +4,36 @@ from product_management.models import Product_Forign
 
 # Create your models here.
 
+class CustManager(models.Manager):
+    def get_all(self):
+        print("--------------GET_ALL")
+        return super().get_queryset()
+
+class CustM(models.Manager):
+    def get_all_rec(self):
+        print("--------------GET_ALL REc--")
+        return super().get_queryset()        
+
 class Customer(models.Model):
     name = models.CharField(max_length=20)
+    # des = models.TextField(blank=True,null=True)
+
+    objects = CustManager()
+    custom_manager = CustManager()
+    mg_q = CustM()
+
+    def __str__(self):
+        return self.name
+
+class TestMigrate(models.Model):
+    names = models.CharField(max_length=100)
+    class Meta:
+        app_label = 'customer'
+
+class TestMigrate2(models.Model):
+    names = models.CharField(max_length=100)
+    class Meta:
+        app_label = 'customer'
 
 class Product(Product_Forign):
     pass

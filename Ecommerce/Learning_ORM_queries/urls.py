@@ -38,7 +38,8 @@ urlpatterns = [
     path("learn_custom_managers/",learn_custom_managers),
     path("learn_database_transactions/",learn_database_transactions),
     path("learn_auto_commit/",learn_auto_commit),
-     path("learn_save_point/",learn_save_point),
+    path("learn_save_point/",learn_save_point),
+    path("learn_multi_databases/",learn_multi_databases),
 ] 
 
 

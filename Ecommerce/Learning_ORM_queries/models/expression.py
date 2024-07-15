@@ -47,3 +47,7 @@ class DBTransactions(models.Model):
     #     transaction.commit()
     #     return res
     
+
+    class Meta:
+        # db_for_read = "postgresql_db"
+        app_label = "Learning_ORM_queries"

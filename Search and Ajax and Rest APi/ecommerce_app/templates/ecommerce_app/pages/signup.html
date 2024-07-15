@@ -1,0 +1,12 @@
+<div class="sign-up-form">
+    <form method="POST" action="/ecommerce/sign-up">
+        {% csrf_token %}
+            {{form.as_p}}
+    <button type="submit">Submit</button>
+    </form>
+    {% if messages %}
+        {% for msg in messages %}
+            ---{{msg}}
+        {% endfor %}
+    {% endif %}
+</div>

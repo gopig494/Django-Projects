@@ -2176,6 +2176,67 @@ def learn_save_point(request):
     
     return render(request,"learning_orm_queries/index.html",{"db_trans":result})
 
+from customer.models import *
+
+def learn_multi_databases(request):
+
+    result = []
+
+    # when there is no default databse is configured and even the databse_routers defined in settings , 
+    # we can override it by usling 'using'  keywork like below 
+
+    # result = Customer.objects.using("sql_lite_db").all()
+
+    # result = Customer.objects.using("postgresql_db").all()
+
+
+    # 2---------------we can use using in save method also
+    # like save(using = "db name")
+
+    # #--------------for delete we can use
+    #result = Customer.objects.using("postgresql_db").get(pk=1)
+    # result.delete() or result.delete(using="db name")
+
+    # 3------------ when use custom manager we can't use like below
+
+    # why we can't use 'using' in the custom manager with custom method means the 'after using the custom method is not available/accessable' 
+
+    # result = Customer.custom_manager.using("sql_lite_db").all() #this is possible because of the 'all' is 'objects' inherited method.
+
+    # result = Customer.custom_manager.using("sql_lite_db").get_all() #this is not possible error will rise
+
+    # to overcome this we can use 'db_manager'
+
+    # db_manager is used to select the database and hold all the custom manager methods
+
+    result = Customer.custom_manager.db_manager("sql_lite_db").get_all()
+
+    result = Customer.mg_q.db_manager("sql_lite_db").get_all_rec()
+
+    print("-------result--manager---------",result)
+
+    # --3 use multi database in cursor
+
+    from django.db import connections
+
+    with connections["postgresql_db"].cursor() as cursor:
+        cursor.execute(" SELECT * FROM customer_customer")
+        
+        # when using dynamic params do not include '' quotes in query like '%s' use only %s
+        
+        # cursor.execute(" SELECT * FROM customer_customer where name=%s",['Gopi'])
+
+        # row = cursor.fetchone()
+        all_row = cursor.fetchall()
+        # many_row = cursor.fetchmany()
+        # print("---fetch one---",row)
+        print("---fetch all--",all_row)
+        # print("---fetch many_row--",many_row)
+
+    # result = []
+
+    return render(request,"learning_orm_queries/index.html",{"db_trans":result})
+
 
 def from_youtube(request):
     pass
